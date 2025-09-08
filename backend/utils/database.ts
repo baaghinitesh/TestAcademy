@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-<<<<<<< HEAD
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:hKiltcQH@127.0.0.1:27017/lms_db?authSource=admin';
-=======
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://admin:admin123@127.0.0.1:27017/lms_db?authSource=admin';
->>>>>>> main
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env');
