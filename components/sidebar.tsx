@@ -6,16 +6,53 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  HelpCircle,
+  FileText,
+  BookOpen,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
   {
-    title: 'Dashboard',
+    title: 'Overview',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Manage Questions',
+    href: '/admin/questions',
+    icon: HelpCircle,
+  },
+  {
+    title: 'Manage Tests',
+    href: '/admin/tests',
+    icon: FileText,
+  },
+  {
+    title: 'Study Materials',
+    href: '/admin/materials',
+    icon: BookOpen,
+  },
+  {
+    title: 'User Management',
+    href: '/admin/users',
+    icon: Users,
+  },
+  {
+    title: 'Analytics',
+    href: '/admin/analytics',
+    icon: BarChart3,
+  },
+  {
+    title: 'Settings',
+    href: '/admin/settings',
+    icon: Settings,
   },
 ];
 
