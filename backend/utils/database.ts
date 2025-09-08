@@ -45,3 +45,6 @@ async function connectToDatabase(): Promise<typeof mongoose> {
 }
 
 export default connectToDatabase;
+
+// Alias for backward compatibility
+export const connectDB = connectToDatabase;

@@ -3,12 +3,13 @@ import type { Metadata, Viewport } from 'next';
 import { Manrope } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/contexts/theme-context';
-import Header from '@/components/header';
+import Navbar from '@/components/navbar';
+import { getUser } from '@/lib/db/queries-mongo';
 import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
-  title: 'Learning Management System',
-  description: 'Comprehensive LMS with online testing, study materials, and admin panel'
+  title: 'EduTest - Study & Test Platform',
+  description: 'Online learning platform for Classes 5-10 with study materials, tests, and performance analytics'
 };
 
 export const viewport: Viewport = {
@@ -24,7 +25,12 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || '';
-  const isAdminRoute = pathname.startsWith('/admin');
+  
+  // Get user data for navbar
+  const user = await getUser();
+  
+  // Hide navbar on test panel pages for fullscreen experience
+  const hideNavbar = pathname.startsWith('/test/') && pathname.includes('/panel');
 
   return (
     <html
@@ -35,8 +41,10 @@ export default async function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <div className="flex flex-col min-h-screen">
-              {(isAdminRoute || pathname === '/') && <Header />}
-              {children}
+              {!hideNavbar && <Navbar user={user} />}
+              <main className="flex-1">
+                {children}
+              </main>
             </div>
           </AuthProvider>
         </ThemeProvider>

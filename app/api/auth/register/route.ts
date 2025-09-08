@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '../../../../backend/utils/database';
 import { User } from '../../../../backend/models';
-import { generateToken } from '../../../../backend/utils/jwt';
+import { setSession } from '../../../../lib/auth/session';
 import { validateRequest, registerSchema } from '../../../../backend/utils/validation';
 
 export async function POST(request: NextRequest) {
@@ -55,16 +55,21 @@ export async function POST(request: NextRequest) {
     const user = new User(userData);
     await user.save();
 
-    // Generate JWT token
-    const token = generateToken(user);
+    // Set session cookie
+    await setSession({
+      _id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      class: user.class
+    });
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user.toObject();
 
     return NextResponse.json({
       message: 'User registered successfully',
-      user: userWithoutPassword,
-      token
+      user: userWithoutPassword
     }, { status: 201 });
 
   } catch (error: any) {

@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '../../../../backend/utils/database';
 import { User } from '../../../../backend/models';
-import { requireAuth } from '../../../../backend/middleware/auth';
+import { getSession } from '../../../../lib/auth/session';
 
-async function getMeHandler(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    // Get user from auth middleware
-    const { user } = request as any;
+    // Get session from cookie
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
 
     // Connect to database
     await connectToDatabase();
 
     // Get fresh user data
-    const userData = await User.findById(user.userId).select('-password');
+    const userData = await User.findById(session.userId).select('-password');
     if (!userData) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -32,5 +38,3 @@ async function getMeHandler(request: NextRequest) {
     );
   }
 }
-
-export const GET = requireAuth(getMeHandler);

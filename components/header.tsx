@@ -31,8 +31,8 @@ function UserMenu() {
   const { user, logout, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const handleSignOut = () => {
-    logout();
+  const handleSignOut = async () => {
+    await logout();
     router.push('/sign-in');
   };
 

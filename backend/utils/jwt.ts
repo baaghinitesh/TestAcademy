@@ -38,6 +38,9 @@ export const verifyToken = (token: string): JwtPayload => {
   }
 };
 
+// Alias for backward compatibility
+export const verifyJWT = verifyToken;
+
 export const generateRefreshToken = (user: IUser): string => {
   const payload = {
     userId: user._id.toString(),

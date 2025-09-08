@@ -1,0 +1,193 @@
+/* Mobile-First Responsive Design Utilities */
+
+/* Base responsive breakpoints following Tailwind CSS convention */
+/* sm: 640px, md: 768px, lg: 1024px, xl: 1280px, 2xl: 1536px */
+
+/* Mobile-specific optimizations */
+.mobile-optimized {
+  /* Touch-friendly tap targets */
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.mobile-container {
+  /* Safe area for mobile devices with notches */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.mobile-scroll {
+  /* Smooth scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Card responsive enhancements */
+.mobile-card {
+  /* Better spacing on mobile */
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .mobile-card {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* Navigation enhancements */
+.mobile-nav {
+  /* Full-width navigation on mobile */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Form input optimizations */
+.mobile-input {
+  /* Prevent zoom on focus */
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .mobile-input {
+    font-size: 16px !important;
+  }
+}
+
+/* Chart responsive behavior */
+.mobile-chart {
+  /* Ensure charts are scrollable on mobile */
+  overflow-x: auto;
+  min-width: 100%;
+}
+
+.mobile-chart-container {
+  min-width: 300px;
+  width: 100%;
+}
+
+/* Grid responsive behavior */
+.mobile-grid {
+  /* Auto-fit grid that works on all screen sizes */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+/* Modal and dialog optimizations */
+.mobile-modal {
+  /* Full-screen on mobile */
+  margin: 0;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+@media (max-width: 640px) {
+  .mobile-modal {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+}
+
+/* Text responsive sizing */
+.mobile-heading {
+  /* Scalable headings */
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 1.2;
+}
+
+.mobile-text {
+  /* Readable body text */
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.5;
+}
+
+/* Button optimizations */
+.mobile-button {
+  /* Touch-friendly buttons */
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+}
+
+/* Table responsive behavior */
+.mobile-table {
+  /* Scrollable tables */
+  overflow-x: auto;
+  width: 100%;
+}
+
+.mobile-table table {
+  min-width: 600px;
+}
+
+/* Image responsive behavior */
+.mobile-image {
+  /* Responsive images */
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Spacing utilities for mobile */
+.mobile-spacing {
+  /* Consistent mobile spacing */
+  padding: 1rem;
+}
+
+@media (max-width: 640px) {
+  .mobile-spacing {
+    padding: 0.75rem;
+  }
+}
+
+/* Performance optimizations for mobile */
+.mobile-performance {
+  /* Optimize for mobile performance */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Accessibility improvements for mobile */
+.mobile-accessible {
+  /* Better contrast and sizing for mobile */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) {
+  .mobile-dark {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+}
+
+/* Landscape orientation handling */
+@media (orientation: landscape) and (max-height: 600px) {
+  .mobile-landscape {
+    /* Compact layout for landscape mobile */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}

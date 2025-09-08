@@ -1,5 +1,6 @@
-import { getUser } from '@/lib/db/queries';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { verifyJWT } from '@/backend/utils/jwt';
 import Sidebar from '@/components/sidebar';
 
 export default async function AdminLayout({
@@ -7,9 +8,15 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session')?.value;
   
-  if (!user) {
+  if (!token) {
+    redirect('/sign-in');
+  }
+
+  const decoded = verifyJWT(token);
+  if (!decoded) {
     redirect('/sign-in');
   }
 
