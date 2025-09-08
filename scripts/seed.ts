@@ -9,7 +9,7 @@ async function seedDatabase() {
     await connectToDatabase();
     console.log('✅ Connected to MongoDB');
 
-    // Create default admin user
+    // Create default admin user (as per requirements)
     const existingAdmin = await User.findOne({ email: 'baaghinitesh@gmail.com' });
     if (!existingAdmin) {
       const adminUser = new User({
@@ -20,8 +20,12 @@ async function seedDatabase() {
       });
       await adminUser.save();
       console.log('✅ Default admin user created');
+      console.log('📧 Admin Email: baaghinitesh@gmail.com');
+      console.log('🔑 Admin Password: admin123');
     } else {
       console.log('ℹ️ Default admin user already exists');
+      console.log('📧 Admin Email: baaghinitesh@gmail.com');
+      console.log('🔑 Admin Password: admin123');
     }
 
     // Create demo student user
@@ -106,11 +110,12 @@ async function seedDatabase() {
     }
 
     console.log('🎉 Database seeding completed successfully!');
-    console.log('\n📋 Demo Accounts:');
+    console.log('\n📋 Login Credentials:');
     console.log('👨‍💼 Admin: baaghinitesh@gmail.com / admin123');
     console.log('👨‍🎓 Student: student@example.com / student123');
     console.log('\n🏫 Classes: 5-10 created');
     console.log('📚 Subjects: Mathematics, Science, English, Social Studies, Hindi');
+    console.log('\n🌐 You can now access the LMS at http://localhost:3000');
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);

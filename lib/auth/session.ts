@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
+import bcryptjs from 'bcryptjs';
 
 const key = new TextEncoder().encode(process.env.AUTH_SECRET || 'your-super-secret-jwt-key-change-in-production-lms-2024');
 
@@ -8,6 +9,7 @@ export type SessionData = {
   email: string;
   name: string;
   role: 'student' | 'admin';
+  class?: number;
   expires: string;
 };
 
@@ -41,6 +43,7 @@ export async function setSession(user: {
   name: string;
   email: string;
   role: 'student' | 'admin';
+  class?: number;
 }) {
   const expiresInSevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const session: SessionData = {
@@ -48,6 +51,7 @@ export async function setSession(user: {
     email: user.email,
     name: user.name,
     role: user.role,
+    class: user.class,
     expires: expiresInSevenDays.toISOString(),
   };
   
@@ -77,4 +81,16 @@ export async function isAdmin(): Promise<boolean> {
 export async function isStudent(): Promise<boolean> {
   const session = await getSession();
   return session?.role === 'student';
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12;
+  return await bcryptjs.hash(password, saltRounds);
+}
+
+export async function comparePasswords(
+  plainPassword: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return await bcryptjs.compare(plainPassword, hashedPassword);
 }

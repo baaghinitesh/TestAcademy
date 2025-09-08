@@ -11,8 +11,26 @@ export async function middleware(request: NextRequest) {
   // Set pathname header for layout route detection
   res.headers.set('x-pathname', pathname);
   
-  // Protect admin routes
+  // Protect admin routes with role-based access
   if (pathname.startsWith('/admin')) {
+    if (!sessionCookie) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+    
+    try {
+      const session = await verifyToken(sessionCookie.value);
+      
+      // Check if user has admin role
+      if (!session || session.role !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    } catch (error) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+  }
+  
+  // Protect dashboard routes (requires any authenticated user)
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/test') || pathname.startsWith('/study')) {
     if (!sessionCookie) {
       return NextResponse.redirect(new URL('/sign-in', request.url));
     }

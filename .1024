@@ -6,3 +6,9 @@ dependency_command: npm install
 
 # Command to run when "Run" button clicked
 run_command: npm run dev
+
+# Linter configuration for code quality checks
+linter_config:
+  - config_path: '.eslintrc.json'
+    type: 'eslint'
+    language: 'typescript'
