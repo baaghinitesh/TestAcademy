@@ -454,7 +454,7 @@ export default function AdminSettings() {
             Save Content Settings
           </Button>
         </CardContent>
-      </div>
+      </Card>
 
       {/* System Actions */}
       <Card>
