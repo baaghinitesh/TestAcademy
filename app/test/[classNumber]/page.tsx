@@ -115,7 +115,7 @@ export default function ClassTestPage() {
     }
   ];
 
-  const currentClass = classInfo[classNumber as keyof typeof classInfo];
+  const currentClass = classInfo[parseInt(classNumber) as keyof typeof classInfo];
 
   const getDifficultyColor = (difficulty: string) => {
     if (difficulty.includes('Mixed')) return 'bg-yellow-100 text-yellow-800';

@@ -1,33 +1,45 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useActionState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CircleIcon, Loader2 } from 'lucide-react';
-import { signIn } from './actions';
-import { ActionState } from '@/lib/auth/middleware';
+import { useAuth } from '@/contexts/auth-context';
 
 export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect');
-  const priceId = searchParams.get('priceId');
-  const inviteId = searchParams.get('inviteId');
-  const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    signIn,
-    { error: '' }
-  );
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPending(true);
+    setError('');
+    
+    const result = await login(email, password);
+    
+    if (result.success) {
+      router.push(redirect || '/admin');
+    } else {
+      setError(result.error || 'Login failed');
+    }
+    
+    setPending(false);
+  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background">
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <form className="space-y-6" action={formAction}>
-          <input type="hidden" name="redirect" value={redirect || ''} />
-          <input type="hidden" name="priceId" value={priceId || ''} />
-          <input type="hidden" name="inviteId" value={inviteId || ''} />
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <Label
               htmlFor="email"
@@ -41,7 +53,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 name="email"
                 type="email"
                 autoComplete="email"
-                defaultValue={state.email}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 maxLength={50}
                 className="rounded-full"
@@ -65,7 +78,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
                 autoComplete={
                   mode === 'signin' ? 'current-password' : 'new-password'
                 }
-                defaultValue={state.password}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
                 maxLength={100}
@@ -75,8 +89,8 @@ export function Login({ mode = 'signin' }: { mode?: 'signin' | 'signup' }) {
             </div>
           </div>
 
-          {state?.error && (
-            <div className="text-destructive text-sm">{state.error}</div>
+          {error && (
+            <div className="text-destructive text-sm">{error}</div>
           )}
 
           <div>

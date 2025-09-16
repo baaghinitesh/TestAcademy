@@ -90,7 +90,7 @@ export default function ClassStudyPage() {
     }
   ];
 
-  const currentClass = classInfo[classNumber as keyof typeof classInfo];
+  const currentClass = classInfo[parseInt(classNumber) as keyof typeof classInfo];
 
   if (loading) {
     return (

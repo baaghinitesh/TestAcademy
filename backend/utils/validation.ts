@@ -46,7 +46,7 @@ export const createMaterialSchema = z.object({
 });
 
 // Test validation schemas
-export const createTestSchema = z.object({
+const baseTestSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title cannot exceed 200 characters'),
   description: z.string().max(1000, 'Description cannot exceed 1000 characters').optional(),
   subject: z.string().min(1, 'Subject is required'),
@@ -63,10 +63,14 @@ export const createTestSchema = z.object({
   randomizeOptions: z.boolean().default(false),
   startTime: z.string().datetime().optional(),
   endTime: z.string().datetime().optional()
-}).refine((data) => data.passingMarks <= data.totalMarks, {
+});
+
+export const createTestSchema = baseTestSchema.refine((data) => data.passingMarks <= data.totalMarks, {
   message: 'Passing marks cannot be greater than total marks',
   path: ['passingMarks']
 });
+
+export const updateTestSchema = baseTestSchema.partial();
 
 // Question validation schemas
 export const optionSchema = z.object({
@@ -74,7 +78,7 @@ export const optionSchema = z.object({
   isCorrect: z.boolean().default(false)
 });
 
-export const createQuestionSchema = z.object({
+const baseQuestionSchema = z.object({
   test: z.string().min(1, 'Test ID is required'),
   question: z.string().min(1, 'Question text is required').max(2000, 'Question cannot exceed 2000 characters'),
   questionType: z.enum(['single-choice', 'multiple-choice']).default('single-choice'),
@@ -82,7 +86,9 @@ export const createQuestionSchema = z.object({
   explanation: z.string().max(1000, 'Explanation cannot exceed 1000 characters').optional(),
   marks: z.number().min(0.5, 'Minimum marks is 0.5').max(10, 'Maximum marks is 10'),
   order: z.number().min(1, 'Order must be at least 1')
-}).refine((data) => {
+});
+
+export const createQuestionSchema = baseQuestionSchema.refine((data) => {
   const correctOptions = data.options.filter(option => option.isCorrect);
   
   if (data.questionType === 'single-choice') {
@@ -94,6 +100,8 @@ export const createQuestionSchema = z.object({
   message: 'Single-choice questions must have exactly one correct answer, multiple-choice questions must have at least one',
   path: ['options']
 });
+
+export const updateQuestionSchema = baseQuestionSchema.partial();
 
 // Attempt validation schemas
 export const submitAnswerSchema = z.object({

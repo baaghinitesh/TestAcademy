@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '../../../../backend/utils/database';
 import { Test, Question } from '../../../../backend/models';
 import { requireAuth, requireAdmin } from '../../../../backend/middleware/auth';
-import { validateRequest, createTestSchema } from '../../../../backend/utils/validation';
+import { validateRequest, createTestSchema, updateTestSchema } from '../../../../backend/utils/validation';
 
 // GET /api/tests/[id] - Get test by ID
 async function getTestHandler(request: NextRequest, { params }: { params: { id: string } }) {
@@ -43,8 +43,7 @@ async function updateTestHandler(request: NextRequest, { params }: { params: { i
     const body = await request.json();
     
     // Validate request body (make fields optional for update)
-    const updateSchema = createTestSchema.partial();
-    const validation = validateRequest(updateSchema, body);
+    const validation = validateRequest(updateTestSchema, body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: validation.errors },
@@ -56,7 +55,7 @@ async function updateTestHandler(request: NextRequest, { params }: { params: { i
 
     const updatedTest = await Test.findByIdAndUpdate(
       params.id,
-      validation.data,
+      validation.data as any,
       { new: true, runValidators: true }
     ).populate(['subject', 'createdBy']);
 

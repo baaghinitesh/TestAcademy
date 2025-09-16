@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { verifyJWT } from '@/backend/utils/jwt';
+import { getSession } from '@/lib/auth/session';
 import User from '@/backend/models/User';
 import { connectDB } from '@/backend/utils/database';
 
@@ -7,18 +7,13 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     
-    const token = request.cookies.get('session')?.value;
+    const session = await getSession();
     
-    if (!token) {
+    if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = verifyJWT(token);
-    if (!decoded) {
-      return Response.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(session.userId).select('-password');
     if (!user) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }

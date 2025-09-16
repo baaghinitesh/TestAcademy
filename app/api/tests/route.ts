@@ -21,21 +21,58 @@ async function getTestsHandler(request: NextRequest) {
     if (classNumber) query.classNumber = parseInt(classNumber);
     if (isPublished) query.isPublished = isPublished === 'true';
 
-    const tests = await Test.find(query)
-      .populate('subject', 'name')
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 });
-
-    // Add question count for each test
-    const testsWithQuestionCount = await Promise.all(
-      tests.map(async (test) => {
-        const questionCount = await Question.countDocuments({ test: test._id, isActive: true });
-        return {
-          ...test.toObject(),
-          actualQuestionCount: questionCount
-        };
-      })
-    );
+    // Optimize: Use aggregation pipeline to get question counts in single query
+    const testsWithQuestionCount = await Test.aggregate([
+      { $match: query },
+      {
+        $lookup: {
+          from: 'subjects',
+          localField: 'subject',
+          foreignField: '_id',
+          as: 'subject',
+          pipeline: [{ $project: { name: 1 } }]
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'createdBy',
+          foreignField: '_id',
+          as: 'createdBy',
+          pipeline: [{ $project: { name: 1, email: 1 } }]
+        }
+      },
+      {
+        $lookup: {
+          from: 'questions',
+          let: { testId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$test', '$$testId'] },
+                    { $eq: ['$isActive', true] }
+                  ]
+                }
+              }
+            },
+            { $count: 'count' }
+          ],
+          as: 'questionCount'
+        }
+      },
+      {
+        $addFields: {
+          subject: { $arrayElemAt: ['$subject', 0] },
+          createdBy: { $arrayElemAt: ['$createdBy', 0] },
+          actualQuestionCount: {
+            $ifNull: [{ $arrayElemAt: ['$questionCount.count', 0] }, 0]
+          }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
 
     return NextResponse.json({
       tests: testsWithQuestionCount

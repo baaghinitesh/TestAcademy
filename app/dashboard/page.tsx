@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -44,7 +44,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
-
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -68,8 +67,8 @@ export default function DashboardPage() {
     fetchUser();
   }, []);
 
-  // Sample dashboard data - in real app, this would come from API
-  const dashboardData = {
+  // Memoize dashboard data for performance
+  const dashboardData = useMemo(() => ({
     overview: {
       totalTests: 47,
       completedTests: 35,
@@ -122,7 +121,7 @@ export default function DashboardPage() {
       { id: 2, title: 'Complete 50 Tests', progress: 35, target: 50, deadline: '2024-02-28' },
       { id: 3, title: 'Study 40 Hours This Month', progress: 24.5, target: 40, deadline: '2024-01-31' }
     ]
-  };
+  }), []);
 
   const COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444'];
 

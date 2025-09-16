@@ -40,7 +40,7 @@ async function getAttemptHandler(request: NextRequest, { params }: { params: { i
         _id: q._id,
         question: q.question,
         options: q.options,
-        correctOptions: q.options.map((opt, idx) => opt.isCorrect ? idx : -1).filter(idx => idx >= 0),
+        correctOptions: q.options.map((opt: any, idx: number) => opt.isCorrect ? idx : -1).filter((idx: number) => idx >= 0),
         explanation: q.explanation,
         marks: q.marks,
         order: q.order
@@ -100,7 +100,7 @@ async function updateAttemptHandler(request: NextRequest, { params }: { params: 
       if (questionId && selectedOptions !== undefined) {
         // Update specific question answer
         const answerIndex = attempt.answers.findIndex(
-          ans => ans.questionId.toString() === questionId
+          (ans: any) => ans.questionId.toString() === questionId
         );
         
         if (answerIndex >= 0) {
@@ -129,13 +129,13 @@ async function updateAttemptHandler(request: NextRequest, { params }: { params: 
 
       // Calculate results
       let totalMarksObtained = 0;
-      const updatedAnswers = attempt.answers.map(answer => {
+      const updatedAnswers = attempt.answers.map((answer: any) => {
         const question = questions.find(q => q._id.toString() === answer.questionId.toString());
         if (!question) return answer;
 
         const correctOptions = question.options
-          .map((opt, idx) => opt.isCorrect ? idx : -1)
-          .filter(idx => idx >= 0);
+          .map((opt: any, idx: number) => opt.isCorrect ? idx : -1)
+          .filter((idx: number) => idx >= 0);
 
         let isCorrect = false;
         let marksObtained = 0;

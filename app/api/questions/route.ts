@@ -4,25 +4,64 @@ import { Question, Test } from '../../../backend/models';
 import { requireAuth, requireAdmin } from '../../../backend/middleware/auth';
 import { validateRequest, createQuestionSchema } from '../../../backend/utils/validation';
 
-// GET /api/questions - Get questions by test
+// GET /api/questions - Get questions with enhanced filtering
 async function getQuestionsHandler(request: NextRequest) {
   try {
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
     const testId = searchParams.get('test');
+    const subjectId = searchParams.get('subject');
+    const classNumber = searchParams.get('classNumber');
+    const chapter = searchParams.get('chapter');
+    const topic = searchParams.get('topic');
+    const difficulty = searchParams.get('difficulty');
+    const tags = searchParams.get('tags');
+    const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
-    if (!testId) {
-      return NextResponse.json(
-        { error: 'Test ID is required' },
-        { status: 400 }
-      );
+    let query: any = { isActive: true };
+    
+    // Build query based on filters
+    if (testId) query.test = testId;
+    if (subjectId) query.subject = subjectId;
+    if (classNumber) query.classNumber = parseInt(classNumber);
+    if (chapter) query.chapter = chapter;
+    if (topic) query.topic = topic;
+    if (difficulty) query.difficulty = difficulty;
+    if (tags) query.tags = { $in: tags.split(',') };
+    if (search) {
+      query.$or = [
+        { question: { $regex: search, $options: 'i' } },
+        { explanation: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    const questions = await Question.find({ test: testId, isActive: true }).sort({ order: 1 });
+    // Get paginated results with populated references
+    const skip = (page - 1) * limit;
+    const questions = await Question.find(query)
+      .populate('subject', 'name')
+      .populate('test', 'title')
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1, order: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalQuestions = await Question.countDocuments(query);
+    const totalPages = Math.ceil(totalQuestions / limit);
 
     return NextResponse.json({
-      questions
+      questions,
+      pagination: {
+        page,
+        limit,
+        totalQuestions,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     });
 
   } catch (error: any) {

@@ -6,6 +6,8 @@ import { ThemeProvider } from '@/contexts/theme-context';
 import Navbar from '@/components/navbar';
 import { getUser } from '@/lib/db/queries-mongo';
 import { headers } from 'next/headers';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { PerformanceMonitor } from '@/components/debug/performance-monitor';
 
 export const metadata: Metadata = {
   title: 'EduTest - Study & Test Platform',
@@ -38,16 +40,27 @@ export default async function RootLayout({
       className={`${manrope.className}`}
     >
       <body className="min-h-[100dvh] bg-background text-foreground">
-        <ThemeProvider>
-          <AuthProvider>
-            <div className="flex flex-col min-h-screen">
-              {!hideNavbar && <Navbar user={user} />}
-              <main className="flex-1">
-                {children}
-              </main>
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <ErrorBoundary>
+                <div className="flex flex-col min-h-screen">
+                  {!hideNavbar && (
+                    <ErrorBoundary>
+                      <Navbar user={user} />
+                    </ErrorBoundary>
+                  )}
+                  <main className="flex-1">
+                    <ErrorBoundary>
+                      {children}
+                    </ErrorBoundary>
+                  </main>
+                </div>
+              </ErrorBoundary>
+            </AuthProvider>
+          </ThemeProvider>
+          <PerformanceMonitor />
+        </ErrorBoundary>
       </body>
     </html>
   );

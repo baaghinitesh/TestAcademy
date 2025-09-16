@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IOption {
   text: string;
   isCorrect: boolean;
+  imageUrl?: string;
 }
 
 export interface IQuestion extends Document {
@@ -13,7 +14,16 @@ export interface IQuestion extends Document {
   explanation?: string;
   marks: number;
   order: number;
+  subject: mongoose.Types.ObjectId;
+  classNumber: number;
+  chapter?: string;
+  topic?: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  questionImageUrl?: string;
+  explanationImageUrl?: string;
+  tags: string[];
   isActive: boolean;
+  createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +38,10 @@ const OptionSchema: Schema = new Schema({
   isCorrect: {
     type: Boolean,
     default: false
+  },
+  imageUrl: {
+    type: String,
+    trim: true
   }
 });
 
@@ -74,9 +88,52 @@ const QuestionSchema: Schema = new Schema({
     required: [true, 'Question order is required'],
     min: [1, 'Order must be at least 1']
   },
+  subject: {
+    type: Schema.Types.ObjectId,
+    ref: 'Subject',
+    required: [true, 'Subject is required']
+  },
+  classNumber: {
+    type: Number,
+    required: [true, 'Class number is required'],
+    min: [5, 'Class must be between 5 and 10'],
+    max: [10, 'Class must be between 5 and 10']
+  },
+  chapter: {
+    type: String,
+    maxlength: [100, 'Chapter name cannot exceed 100 characters']
+  },
+  topic: {
+    type: String,
+    maxlength: [100, 'Topic name cannot exceed 100 characters']
+  },
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard'],
+    required: [true, 'Difficulty level is required'],
+    default: 'medium'
+  },
+  questionImageUrl: {
+    type: String,
+    trim: true
+  },
+  explanationImageUrl: {
+    type: String,
+    trim: true
+  },
+  tags: [{
+    type: String,
+    trim: true,
+    maxlength: [50, 'Tag cannot exceed 50 characters']
+  }],
   isActive: {
     type: Boolean,
     default: true
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Creator is required']
   }
 }, {
   timestamps: true
@@ -98,6 +155,12 @@ QuestionSchema.pre<IQuestion>('save', function(next) {
 
 // Index for better query performance
 QuestionSchema.index({ test: 1, order: 1 });
+QuestionSchema.index({ subject: 1, classNumber: 1 });
+QuestionSchema.index({ subject: 1, classNumber: 1, chapter: 1 });
+QuestionSchema.index({ subject: 1, classNumber: 1, topic: 1 });
+QuestionSchema.index({ difficulty: 1 });
+QuestionSchema.index({ tags: 1 });
 QuestionSchema.index({ isActive: 1 });
+QuestionSchema.index({ createdBy: 1 });
 
 export default mongoose.models.Question || mongoose.model<IQuestion>('Question', QuestionSchema);

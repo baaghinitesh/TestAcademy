@@ -147,7 +147,7 @@ async function startAttemptHandler(request: NextRequest) {
       questions: questions.map(q => ({
         _id: q._id,
         question: q.question,
-        options: q.options.map((opt, idx) => ({ text: opt.text, index: idx })),
+        options: q.options.map((opt: any, idx: number) => ({ text: opt.text, index: idx })),
         questionType: q.questionType,
         marks: q.marks,
         order: q.order

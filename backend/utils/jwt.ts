@@ -12,7 +12,7 @@ export interface JwtPayload {
 
 export const generateToken = (user: IUser): string => {
   const payload: JwtPayload = {
-    userId: user._id.toString(),
+    userId: (user._id as any).toString(),
     email: user.email,
     role: user.role,
     name: user.name
@@ -43,7 +43,7 @@ export const verifyJWT = verifyToken;
 
 export const generateRefreshToken = (user: IUser): string => {
   const payload = {
-    userId: user._id.toString(),
+    userId: (user._id as any).toString(),
     email: user.email,
     tokenType: 'refresh'
   };

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '../../../../backend/utils/database';
 import { Question, Test } from '../../../../backend/models';
 import { requireAuth, requireAdmin } from '../../../../backend/middleware/auth';
-import { validateRequest, createQuestionSchema } from '../../../../backend/utils/validation';
+import { validateRequest, createQuestionSchema, updateQuestionSchema } from '../../../../backend/utils/validation';
 
 // GET /api/questions/[id] - Get question by ID
 async function getQuestionHandler(request: NextRequest, { params }: { params: { id: string } }) {
@@ -36,8 +36,7 @@ async function updateQuestionHandler(request: NextRequest, { params }: { params:
     const body = await request.json();
     
     // Validate request body (make fields optional for update)
-    const updateSchema = createQuestionSchema.partial();
-    const validation = validateRequest(updateSchema, body);
+    const validation = validateRequest(updateQuestionSchema, body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: validation.errors },
@@ -49,7 +48,7 @@ async function updateQuestionHandler(request: NextRequest, { params }: { params:
 
     const updatedQuestion = await Question.findByIdAndUpdate(
       params.id,
-      validation.data,
+      validation.data as any,
       { new: true, runValidators: true }
     );
 
@@ -61,7 +60,7 @@ async function updateQuestionHandler(request: NextRequest, { params }: { params:
     }
 
     // Update test's total marks if marks changed
-    if (validation.data!.marks !== undefined) {
+    if (validation.data && (validation.data as any).marks !== undefined) {
       const totalMarks = await Question.aggregate([
         { $match: { test: updatedQuestion.test, isActive: true } },
         { $group: { _id: null, total: { $sum: '$marks' } } }
