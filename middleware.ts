@@ -51,10 +51,10 @@ export async function middleware(request: NextRequest) {
         res.cookies.set({
           name: 'session',
           value: await signToken({
-            userId: parsed.userId!,
-            email: parsed.email!,
-            name: parsed.name!,
-            role: parsed.role!,
+            userId: parsed.userId,
+            email: parsed.email,
+            name: parsed.name,
+            role: parsed.role,
             class: parsed.class,
             expires: expiresInOneDay.toISOString()
           }),

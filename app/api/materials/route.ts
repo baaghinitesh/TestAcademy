@@ -14,7 +14,7 @@ async function getMaterialsHandler(request: NextRequest) {
     const classNumber = searchParams.get('class');
     const type = searchParams.get('type');
 
-    let query: any = { isActive: true };
+    const query: any = { isActive: true };
     
     // Build query filters
     if (subject) query.subject = subject;

@@ -21,7 +21,7 @@ async function getQuestionsHandler(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    let query: any = { isActive: true };
+    const query: any = { isActive: true };
     
     // Build query based on filters
     if (testId) query.test = testId;

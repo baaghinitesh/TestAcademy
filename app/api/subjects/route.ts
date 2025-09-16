@@ -12,7 +12,7 @@ async function getSubjectsHandler(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const classNumber = searchParams.get('class');
 
-    let query: any = { isActive: true };
+    const query: any = { isActive: true };
     
     // Filter by class if provided
     if (classNumber) {

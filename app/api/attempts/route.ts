@@ -13,7 +13,7 @@ async function getAttemptsHandler(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const testId = searchParams.get('test');
 
-    let query: any = { student: user.userId };
+    const query: any = { student: user.userId };
     if (testId) query.test = testId;
 
     const attempts = await Attempt.find(query)

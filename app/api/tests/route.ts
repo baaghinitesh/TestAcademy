@@ -14,7 +14,7 @@ async function getTestsHandler(request: NextRequest) {
     const classNumber = searchParams.get('class');
     const isPublished = searchParams.get('published');
 
-    let query: any = { isActive: true };
+    const query: any = { isActive: true };
     
     // Build query filters
     if (subject) query.subject = subject;

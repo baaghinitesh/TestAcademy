@@ -1,13 +1,8 @@
-// Middleware types for auth context
 export interface ActionState {
   success: boolean;
-  error?: string;
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-    role: 'admin' | 'student';
-    class?: number;
+  message?: string;
+  errors?: {
+    [key: string]: string[];
   };
 }
 
@@ -15,7 +10,7 @@ export interface SessionData {
   userId: string;
   email: string;
   name: string;
-  role: 'admin' | 'student';
+  role: 'student' | 'admin';
   class?: number;
   expires: string;
 }

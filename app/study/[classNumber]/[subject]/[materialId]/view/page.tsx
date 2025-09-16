@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Download, Share2, Star, Clock, Eye } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Star, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,14 +11,15 @@ import PDFViewer from '@/components/pdf-viewer';
 
 export default function MaterialViewPage() {
   const params = useParams();
-  const router = useRouter();
+  // const router = useRouter(); // TODO: Implement navigation if needed
   const classNumber = params.classNumber as string;
   const subject = params.subject as string;
   const materialId = params.materialId as string;
   
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{name: string; email: string; role: string} | null>(null);
   const [loading, setLoading] = useState(true);
-  const [material, setMaterial] = useState<any>(null);
+  interface Material { id: string; title: string; type: string; pdfUrl?: string; rating: number; downloads: number; views: number; }
+  const [material, setMaterial] = useState<Material | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
