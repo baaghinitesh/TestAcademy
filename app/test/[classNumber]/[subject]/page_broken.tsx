@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Search, Filter, Play } from 'lucide-react';
+import { FileCheck, Clock, Users, TrendingUp, ArrowLeft, Search, Filter, Play, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -84,16 +84,54 @@ export default function SubjectTestPage() {
     }
   };
 
+  // Tests are fetched from API in useEffect
+
   const currentSubject = subjectInfo[subject as keyof typeof subjectInfo];
 
   const filteredTests = tests.filter(test => {
     const matchesSearch = test.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          test.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          test.chapter?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = selectedDifficulty === 'all' || selectedDifficulty === 'medium';
-    const matchesStatus = selectedStatus === 'all' || test.isPublished;
+    const matchesDifficulty = selectedDifficulty === 'all' || selectedDifficulty === 'medium'; // API uses 'medium' instead of 'Intermediate'
+    const matchesStatus = selectedStatus === 'all' || test.isPublished; // All published tests are available
     return matchesSearch && matchesDifficulty && matchesStatus;
   });
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return 'bg-green-100 text-green-800';
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
+      case 'Advanced': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'in_progress': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
+      default: return <Play className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Completed';
+      case 'in_progress': return 'In Progress';
+      case 'failed': return 'Needs Retry';
+      case 'not_started': return 'Not Started';
+      default: return 'Unknown';
+    }
+  };
+
+  const getScoreColor = (score: number | null) => {
+    if (!score) return 'text-muted-foreground';
+    if (score >= 85) return 'text-green-600';
+    if (score >= 70) return 'text-blue-600';
+    if (score >= 60) return 'text-orange-600';
+    return 'text-red-600';
+  };
 
   if (loading) {
     return (
@@ -116,12 +154,10 @@ export default function SubjectTestPage() {
     );
   }
 
-  const sectionClasses = `bg-gradient-to-r ${currentSubject.color} py-16 text-white`;
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header Section */}
-      <section className={sectionClasses}>
+      <section className={`bg-gradient-to-r ${currentSubject.color} py-16 text-white`}>
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center mb-6">
@@ -273,12 +309,14 @@ export default function SubjectTestPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
             </div>
 
             {filteredTests.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📝</div>
+              <div className="text-center py-16">
+                <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileCheck className="w-12 h-12 text-muted-foreground" />
+                </div>
                 <h3 className="text-xl font-semibold mb-2">No tests found</h3>
                 <p className="text-muted-foreground mb-4">
                   Try adjusting your search terms or filters
