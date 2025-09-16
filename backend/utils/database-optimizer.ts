@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import QuestionEnhanced from '../models/QuestionEnhanced';
+import QuestionEnhancedV2 from '../models/QuestionEnhancedV2';
 import TestEnhanced from '../models/TestEnhanced';
 import AttemptEnhanced from '../models/AttemptEnhanced';
 import MaterialEnhanced from '../models/MaterialEnhanced';
@@ -14,31 +14,31 @@ export class DatabaseOptimizer {
       console.log('Creating optimized database indexes...');
       
       // Question Enhanced Indexes
-      await QuestionEnhanced.collection.createIndex({ 
+      await QuestionEnhancedV2.collection.createIndex({ 
         classId: 1, 
         subjectId: 1, 
         chapterId: 1, 
         topicId: 1 
       });
       
-      await QuestionEnhanced.collection.createIndex({ 
+      await QuestionEnhancedV2.collection.createIndex({ 
         type: 1, 
         difficulty: 1, 
         isActive: 1, 
         'verification.status': 1 
       });
       
-      await QuestionEnhanced.collection.createIndex({ 
+      await QuestionEnhancedV2.collection.createIndex({ 
         'bulkUpload.batchId': 1 
       });
       
-      await QuestionEnhanced.collection.createIndex({ 
+      await QuestionEnhancedV2.collection.createIndex({ 
         'analytics.usageCount': -1, 
         'analytics.averageScore': -1 
       });
       
       // Text search index for questions
-      await QuestionEnhanced.collection.createIndex({ 
+      await QuestionEnhancedV2.collection.createIndex({ 
         question: 'text', 
         'options': 'text', 
         explanation: 'text',
@@ -133,7 +133,7 @@ export class DatabaseOptimizer {
       const db = mongoose.connection.db;
       
       // Get collection stats
-      const collections = ['questionsEnhanced', 'testsEnhanced', 'attemptsEnhanced', 'materialsEnhanced'];
+      const collections = ['questionenhancedv2s', 'testenhanceds', 'attemptenhanceds', 'materialenhanceds'];
       const stats = {};
       
       for (const collectionName of collections) {

@@ -7,7 +7,7 @@ import Navbar from '@/components/navbar';
 import { getUser } from '@/lib/db/queries-mongo';
 import { headers } from 'next/headers';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { PerformanceMonitor } from '@/components/debug/performance-monitor';
+
 
 export const metadata: Metadata = {
   title: 'EduTest - Study & Test Platform',
@@ -59,7 +59,7 @@ export default async function RootLayout({
               </ErrorBoundary>
             </AuthProvider>
           </ThemeProvider>
-          <PerformanceMonitor />
+
         </ErrorBoundary>
       </body>
     </html>

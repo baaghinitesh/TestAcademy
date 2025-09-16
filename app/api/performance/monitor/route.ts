@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/config/db';
-import QuestionEnhanced from '@/backend/models/QuestionEnhanced';
+import QuestionEnhancedV2 from '@/backend/models/QuestionEnhancedV2';
 import TestEnhanced from '@/backend/models/TestEnhanced';
 import AttemptEnhanced from '@/backend/models/AttemptEnhanced';
 import MaterialEnhanced from '@/backend/models/MaterialEnhanced';
@@ -57,7 +57,7 @@ class PerformanceMonitor {
         password: process.env.REDIS_PASSWORD
       });
     } catch (error) {
-      console.warn('Cache service not available for monitoring');
+      // Cache service not available for monitoring
     }
   }
   
@@ -105,7 +105,7 @@ class PerformanceMonitor {
       
       // Count documents in each collection
       const collections = {
-        questions: await QuestionEnhanced.countDocuments(),
+        questions: await QuestionEnhancedV2.countDocuments(),
         tests: await TestEnhanced.countDocuments(),
         attempts: await AttemptEnhanced.countDocuments(),
         materials: await MaterialEnhanced.countDocuments()
@@ -127,7 +127,7 @@ class PerformanceMonitor {
       };
       
     } catch (error) {
-      console.error('Database metrics collection failed:', error);
+      // Database metrics collection failed
       return {
         error: 'Failed to collect database metrics',
         collections: {},
@@ -179,7 +179,7 @@ class PerformanceMonitor {
       ] = await Promise.all([
         // These would need proper User model - using placeholder counts
         1000, // User.countDocuments(),
-        QuestionEnhanced.countDocuments({ isActive: true }),
+        QuestionEnhancedV2.countDocuments({ isActive: true }),
         TestEnhanced.countDocuments({ isActive: true }),
         AttemptEnhanced.countDocuments(),
         MaterialEnhanced.countDocuments({ isActive: true }),
@@ -251,7 +251,7 @@ class PerformanceMonitor {
         attemptsStarted,
         materialsUploaded
       ] = await Promise.all([
-        QuestionEnhanced.countDocuments({ createdAt: { $gte: last24Hours } }),
+        QuestionEnhancedV2.countDocuments({ createdAt: { $gte: last24Hours } }),
         TestEnhanced.countDocuments({ createdAt: { $gte: last24Hours } }),
         AttemptEnhanced.countDocuments({ createdAt: { $gte: last24Hours } }),
         MaterialEnhanced.countDocuments({ createdAt: { $gte: last24Hours } })
@@ -510,7 +510,7 @@ export async function POST(request: NextRequest) {
       // Database check
       try {
         await connectDB();
-        await QuestionEnhanced.findOne().limit(1);
+        await QuestionEnhancedV2.findOne().limit(1);
         healthChecks.database = true;
       } catch (error) {
         console.error('Database health check failed:', error);

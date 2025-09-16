@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/backend/config/db';
 import TestEnhanced from '@/backend/models/TestEnhanced';
 import AttemptEnhanced from '@/backend/models/AttemptEnhanced';
-import QuestionEnhanced from '@/backend/models/QuestionEnhanced';
+import QuestionEnhancedV2 from '@/backend/models/QuestionEnhancedV2';
 
 interface SubmissionData {
   testId: string;

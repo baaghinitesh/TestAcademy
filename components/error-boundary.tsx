@@ -31,7 +31,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Error caught by boundary
     
     this.setState({
       error,
@@ -113,7 +113,7 @@ export function DefaultErrorFallback({ error, retry }: DefaultErrorFallbackProps
 // Hook for functional components to handle errors
 export function useErrorHandler() {
   return (error: Error, errorInfo?: any) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo);
+    // Error caught by handler
     
     // You can integrate with error reporting services here
     // e.g., Sentry, Bugsnag, etc.
@@ -121,7 +121,7 @@ export function useErrorHandler() {
     // For now, just log to console and optionally show a toast notification
     if (typeof window !== 'undefined') {
       // You could integrate with a toast library here
-      console.warn('Error occurred:', error.message);
+      // Error occurred
     }
   };
 }

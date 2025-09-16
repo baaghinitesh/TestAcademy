@@ -683,13 +683,14 @@ export default function SubjectsManagement() {
             <div className="space-y-2">
               <Label>Subject</Label>
               <Select
-                value={selectedSubjectForChapter?._id || ''}
-                onValueChange={(value) => setSelectedSubjectForChapter(subjects.find(s => s._id === value) || null)}
+                value={selectedSubjectForChapter?._id || 'none'}
+                onValueChange={(value) => setSelectedSubjectForChapter(value === 'none' ? null : subjects.find(s => s._id === value) || null)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Select a subject</SelectItem>
                   {subjects.map((subject) => (
                     <SelectItem key={subject._id} value={subject._id}>
                       {subject.name}

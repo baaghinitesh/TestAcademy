@@ -64,7 +64,7 @@ const safeApiCall = async <T>(
   try {
     return await apiCall();
   } catch (error) {
-    console.error('API call failed:', error);
+    // API call failed silently
     onError?.(error);
     return fallback;
   }

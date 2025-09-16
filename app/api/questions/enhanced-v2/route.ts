@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '../../../../backend/utils/database';
+import connectToDatabase from '../../../../backend/utils/database';
 import QuestionEnhanced from '../../../../backend/models/QuestionEnhancedV2';
 import Subject from '../../../../backend/models/Subject';
 import Test from '../../../../backend/models/Test';

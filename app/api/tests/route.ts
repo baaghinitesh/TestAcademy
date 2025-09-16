@@ -44,7 +44,7 @@ async function getTestsHandler(request: NextRequest) {
       },
       {
         $lookup: {
-          from: 'questions',
+          from: 'questionenhancedv2s',
           let: { testId: '$_id' },
           pipeline: [
             {

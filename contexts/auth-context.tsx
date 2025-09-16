@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      // Error fetching user profile
       setUser(null);
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include' // Include cookies in the request
       });
     } catch (error) {
-      console.error('Error during logout:', error);
+      // Error during logout
     } finally {
       setUser(null);
     }

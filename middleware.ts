@@ -65,7 +65,7 @@ export async function middleware(request: NextRequest) {
         });
       }
     } catch (error) {
-      console.error('Error updating session:', error);
+      // Error updating session
       res.cookies.delete('session');
     }
   }

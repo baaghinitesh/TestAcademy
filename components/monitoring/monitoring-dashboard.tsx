@@ -114,7 +114,7 @@ export function MonitoringDashboard({ refreshInterval = 30000 }: MonitoringDashb
         setLogs(logsData.logs || []);
       }
     } catch (error) {
-      console.error('Error fetching monitoring data:', error);
+      // Error fetching monitoring data
       setError('Failed to fetch monitoring data');
     } finally {
       setLoading(false);
@@ -145,7 +145,7 @@ export function MonitoringDashboard({ refreshInterval = 30000 }: MonitoringDashb
         document.body.removeChild(a);
       }
     } catch (error) {
-      console.error('Export error:', error);
+      // Export error
     }
   };
 
@@ -306,7 +306,7 @@ export function MonitoringDashboard({ refreshInterval = 30000 }: MonitoringDashb
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium">Slow Requests (>5s)</span>
+                <span className="font-medium">Slow Requests ({'>'}5s)</span>
                 <span className="text-lg">{performanceMetrics.slowRequests}</span>
               </div>
             </div>

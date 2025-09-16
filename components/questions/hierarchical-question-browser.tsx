@@ -94,8 +94,8 @@ export function HierarchicalQuestionBrowser({
       if (selectedChapter) params.append('chapter', selectedChapter);
       if (selectedTopic) params.append('topic', selectedTopic);
       if (searchTerm) params.append('search', searchTerm);
-      if (difficultyFilter) params.append('difficulty', difficultyFilter);
-      if (statusFilter) params.append('verificationStatus', statusFilter);
+      if (difficultyFilter && difficultyFilter !== 'all') params.append('difficulty', difficultyFilter);
+      if (statusFilter && statusFilter !== 'all') params.append('verificationStatus', statusFilter);
       
       params.append('limit', '50');
       params.append('sortBy', 'usageCount');
@@ -438,7 +438,7 @@ export function HierarchicalQuestionBrowser({
                 <SelectValue placeholder="Difficulty" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="easy">Easy</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="hard">Hard</SelectItem>
@@ -449,7 +449,7 @@ export function HierarchicalQuestionBrowser({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>

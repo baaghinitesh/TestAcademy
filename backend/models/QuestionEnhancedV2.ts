@@ -475,4 +475,4 @@ QuestionEnhancedSchema.statics.getBulkUploadStats = function(batchId: string) {
   ]);
 };
 
-export default mongoose.models.QuestionEnhanced || mongoose.model<IQuestionEnhanced>('QuestionEnhanced', QuestionEnhancedSchema);
+export default mongoose.models.QuestionEnhancedV2 || mongoose.model<IQuestionEnhanced>('QuestionEnhancedV2', QuestionEnhancedSchema);

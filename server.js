@@ -33,7 +33,7 @@ app.prepare().then(() => {
   const activeAttempts = new Map(); // attemptId -> { studentId, testId, startTime, timer }
 
   io.on('connection', (socket) => {
-    console.log('Socket connected:', socket.id);
+    // Socket connected
 
     // Join test room when starting an attempt
     socket.on('join-test', async (data) => {
@@ -42,7 +42,7 @@ app.prepare().then(() => {
       socket.join(`test-${testId}`);
       socket.join(`attempt-${attemptId}`);
       
-      console.log(`Student ${studentId} joined test ${testId}, attempt ${attemptId}`);
+      // Student joined test
       
       // Track active attempt
       activeAttempts.set(attemptId, {
@@ -87,9 +87,9 @@ app.prepare().then(() => {
           timestamp: Date.now()
         });
         
-        console.log(`Auto-saved answer for attempt ${attemptId}, question ${questionId}`);
+        // Auto-saved answer
       } catch (error) {
-        console.error('Auto-save error:', error);
+        // Auto-save error
         socket.emit('save-error', { error: error.message });
       }
     });
@@ -119,7 +119,7 @@ app.prepare().then(() => {
         clearTimeout(attempt.timer);
         activeAttempts.delete(attemptId);
         
-        console.log(`Test submitted for attempt ${attemptId}`);
+        // Test submitted
         
         socket.emit('submission-confirmed', {
           attemptId,
@@ -130,7 +130,7 @@ app.prepare().then(() => {
 
     // Handle disconnect
     socket.on('disconnect', () => {
-      console.log('Socket disconnected:', socket.id);
+      // Socket disconnected
       
       // Clean up any active attempts for this socket
       for (const [attemptId, attempt] of activeAttempts.entries()) {
@@ -139,7 +139,7 @@ app.prepare().then(() => {
             clearTimeout(attempt.timer);
           }
           activeAttempts.delete(attemptId);
-          console.log(`Cleaned up attempt ${attemptId} for disconnected socket`);
+          // Cleaned up attempt for disconnected socket
         }
       }
     });
@@ -147,7 +147,7 @@ app.prepare().then(() => {
     // Admin features
     socket.on('admin-join', (data) => {
       socket.join('admin-room');
-      console.log('Admin joined monitoring room');
+      // Admin joined monitoring room
     });
 
     // Broadcast test updates to admins

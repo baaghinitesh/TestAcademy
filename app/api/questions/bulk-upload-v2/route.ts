@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase } from '../../../../backend/utils/database';
+import connectToDatabase from '../../../../backend/utils/database';
 import QuestionEnhanced from '../../../../backend/models/QuestionEnhancedV2';
 import Subject from '../../../../backend/models/Subject';
 import Test from '../../../../backend/models/Test';
@@ -630,7 +630,7 @@ async function createAutoTest(session: UploadSession, hierarchySummary: any, use
       `Time limit: ${autoTestSettings.duration || 60} minutes`
     ],
     isActive: true,
-    isPublished: false, // Auto-created tests start as drafts
+    isPublished: true, // Auto-created tests are immediately available
     allowedAttempts: 1,
     showResults: true,
     showCorrectAnswers: false,

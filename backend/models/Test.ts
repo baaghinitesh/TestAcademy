@@ -21,6 +21,8 @@ export interface ITest extends Document {
   randomizeQuestions: boolean;
   randomizeOptions: boolean;
   createdBy: mongoose.Types.ObjectId;
+  publishedAt?: Date;
+  publishedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,7 +84,7 @@ const TestSchema: Schema = new Schema({
   },
   isPublished: {
     type: Boolean,
-    default: false
+    default: true
   },
   startTime: {
     type: Date
@@ -115,6 +117,13 @@ const TestSchema: Schema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: [true, 'Creator is required']
+  },
+  publishedAt: {
+    type: Date
+  },
+  publishedBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true

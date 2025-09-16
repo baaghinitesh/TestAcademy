@@ -1,4 +1,4 @@
-import { IQuestion } from '../../backend/models/Question';
+import { IQuestionEnhanced as IQuestion } from '../../backend/models/QuestionEnhancedV2';
 
 export interface SubmittedAnswer {
   questionId: string;

@@ -68,7 +68,7 @@ const safeApiCall = async <T>(
   try {
     return await apiCall();
   } catch (error) {
-    console.error('API call failed:', error);
+    // API call failed silently
     onError?.(error);
     return fallback;
   }
@@ -301,9 +301,9 @@ export default function MaterialsManagement() {
 
   const [filters, setFilters] = useState<FilterState>({
     search: '',
-    subject: '',
-    classNumber: '',
-    materialType: ''
+    subject: 'all',
+    classNumber: 'all',
+    materialType: 'all'
   });
 
   const classes = [5, 6, 7, 8, 9, 10];
@@ -318,9 +318,9 @@ export default function MaterialsManagement() {
         let url = '/api/materials';
         const params = new URLSearchParams();
         
-        if (filters.subject) params.append('subject', filters.subject);
-        if (filters.classNumber) params.append('classNumber', filters.classNumber);
-        if (filters.materialType) params.append('materialType', filters.materialType);
+        if (filters.subject && filters.subject !== 'all') params.append('subject', filters.subject);
+        if (filters.classNumber && filters.classNumber !== 'all') params.append('classNumber', filters.classNumber);
+        if (filters.materialType && filters.materialType !== 'all') params.append('materialType', filters.materialType);
         if (filters.search) params.append('search', filters.search);
         
         if (params.toString()) {
@@ -431,7 +431,7 @@ export default function MaterialsManagement() {
                   onChange={(e) => setFilters(prev => ({ ...prev, classNumber: e.target.value }))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">All Classes</option>
+                  <option value="all">All Classes</option>
                   {classes.map(cls => (
                     <option key={cls} value={cls.toString()}>Class {cls}</option>
                   ))}
@@ -442,7 +442,7 @@ export default function MaterialsManagement() {
                   onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">All Subjects</option>
+                  <option value="all">All Subjects</option>
                   {subjects.map(subject => (
                     <option key={subject} value={subject}>{subject}</option>
                   ))}
@@ -453,7 +453,7 @@ export default function MaterialsManagement() {
                   onChange={(e) => setFilters(prev => ({ ...prev, materialType: e.target.value }))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <option value="">All Types</option>
+                  <option value="all">All Types</option>
                   {materialTypes.map(type => (
                     <option key={type} value={type} className="capitalize">{type}</option>
                   ))}

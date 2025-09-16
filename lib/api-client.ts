@@ -85,7 +85,7 @@ class ApiClient {
         try {
           data = await response.json();
         } catch (parseError) {
-          console.warn('Failed to parse JSON response:', parseError);
+          // Failed to parse JSON response
           data = null;
         }
       } else {
@@ -97,7 +97,7 @@ class ApiClient {
         const isRetryable = response.status >= 500 || response.status === 429;
         
         if (isRetryable && attempt < this.retries) {
-          console.warn(`Request failed with status ${response.status}, retrying (${attempt}/${this.retries})...`);
+          // Request failed, retrying...
           await this.delay(this.retryDelay * attempt);
           return this.makeRequest<T>(url, options, attempt + 1);
         }
@@ -124,7 +124,7 @@ class ApiClient {
       const isTimeoutError = error.name === 'AbortError';
       
       if ((isNetworkError || isTimeoutError) && attempt < this.retries) {
-        console.warn(`Network error, retrying (${attempt}/${this.retries})...`);
+        // Network error, retrying...
         await this.delay(this.retryDelay * attempt);
         return this.makeRequest<T>(url, options, attempt + 1);
       }
