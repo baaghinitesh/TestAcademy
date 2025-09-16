@@ -6,6 +6,9 @@
     "build": "next build",
     "start": "next start",
     "db:seed": "npx tsx scripts/seed.ts",
+    "migrate:questions-v2": "npx tsx scripts/migrate-questions-to-v2.ts",
+    "migrate:questions-v2:dry-run": "npx tsx scripts/migrate-questions-to-v2.ts --dry-run",
+    "migrate:questions-v2:rollback": "npx tsx scripts/migrate-questions-to-v2.ts --rollback",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
   },

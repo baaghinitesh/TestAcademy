@@ -1,5 +1,23 @@
+import { NextRequest } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { getUser } from '@/lib/db/queries-mongo';
+
+// Basic auth function for API routes
+export async function auth(req?: NextRequest) {
+  try {
+    const session = await getSession();
+    
+    if (!session) {
+      return null;
+    }
+    
+    const user = await getUser();
+    return user;
+  } catch (error) {
+    console.error('Auth error:', error);
+    return null;
+  }
+}
 
 export async function requireAuth() {
   const session = await getSession();

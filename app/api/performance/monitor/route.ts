@@ -362,6 +362,24 @@ class PerformanceMonitor {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication and authorization
+    const authResult = await auth(request);
+    if (!authResult.authenticated || authResult.user?.role !== 'admin') {
+      logger.logSecurity({
+        type: 'unauthorized_access',
+        userId: authResult.user?.id,
+        ip: request.ip || 'unknown',
+        userAgent: request.headers.get('user-agent') || 'unknown',
+        details: { endpoint: '/api/performance/monitor', action: 'view_performance_metrics' },
+        severity: 'medium'
+      });
+      
+      return NextResponse.json(
+        { success: false, error: { message: 'Unauthorized' } },
+        { status: 401 }
+      );
+    }
+
     const url = new URL(request.url);
     const metric = url.searchParams.get('metric');
     const timeRange = url.searchParams.get('timeRange') || '1h';
@@ -388,6 +406,14 @@ export async function GET(request: NextRequest) {
           result = { error: 'Unknown metric type' };
       }
       
+      // Log the access
+      logger.logUserActivity(
+        authResult.user.id,
+        'view_specific_performance_metric',
+        { metric, timeRange },
+        request.headers.get('x-request-id') || undefined
+      );
+      
       return NextResponse.json({
         success: true,
         metric,
@@ -395,20 +421,69 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Return all metrics
-      const metrics = await monitor.collectAllMetrics();
-      const recommendations = monitor.generateRecommendations(metrics);
+      const systemMetrics = await monitor.collectAllMetrics();
+      const recommendations = monitor.generateRecommendations(systemMetrics);
+      
+      // Get performance metrics from logger
+      const performanceMetrics = logger.getPerformanceMetrics(timeRange as '1h' | '1d' | '1w');
+      
+      // Combine metrics
+      const combinedMetrics = {
+        ...systemMetrics,
+        api: {
+          ...systemMetrics.api,
+          totalRequests: performanceMetrics.totalRequests,
+          averageResponseTime: performanceMetrics.averageResponseTime,
+          errorRate: performanceMetrics.errorRate,
+          slowRequests: performanceMetrics.slowRequests
+        },
+        database: {
+          ...systemMetrics.database,
+          averageQueryTime: performanceMetrics.averageDbDuration,
+          averageQueries: performanceMetrics.averageDbQueries
+        }
+      };
+      
+      // Enhanced system metrics for monitoring dashboard
+      const enhancedSystemMetrics = {
+        apiResponseTime: performanceMetrics.averageResponseTime,
+        dbQueryTime: performanceMetrics.averageDbDuration,
+        errorRate: performanceMetrics.errorRate,
+        uptime: 99.9, // Would calculate actual uptime
+        memoryUsage: systemMetrics.system?.memoryUsage ? 
+          (systemMetrics.system.memoryUsage.heapUsed / systemMetrics.system.memoryUsage.heapTotal) * 100 : 0,
+        cpuUsage: systemMetrics.system?.cpuUsage || 0
+      };
+      
+      // Log the access
+      logger.logUserActivity(
+        authResult.user.id,
+        'view_performance_metrics',
+        { timeRange, metricsCollected: Object.keys(combinedMetrics) },
+        request.headers.get('x-request-id') || undefined
+      );
       
       return NextResponse.json({
         success: true,
         timestamp: new Date().toISOString(),
-        metrics,
+        metrics: combinedMetrics,
+        systemMetrics: enhancedSystemMetrics,
         recommendations,
+        timeRange,
         status: 'healthy' // Would implement proper health checks
       });
     }
     
   } catch (error: any) {
     console.error('Performance monitoring error:', error);
+    
+    logger.error('api', 'Error collecting performance metrics', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, {
+      error: error instanceof Error ? error : undefined,
+      requestId: request.headers.get('x-request-id') || undefined
+    });
+    
     return NextResponse.json(
       { success: false, message: error.message || 'Monitoring failed' },
       { status: 500 }
