@@ -37,9 +37,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { CrashPreventionBoundary } from '@/components/crash-prevention-system';
 import { apiClient } from '@/lib/api-client';
-import { EnhancedCSVUpload } from '@/components/questions/enhanced-csv-upload';
+import { EnhancedCsvUpload } from '@/components/questions/enhanced-csv-upload';
 import { TestBuilder } from '@/components/tests/test-builder';
 
 interface Test {
@@ -124,19 +124,19 @@ const formatDate = (dateString: string): string => {
 
 // Loading component
 const LoadingSpinner = () => (
-  <ErrorBoundary fallback={<div className="text-center p-4">Loading failed</div>}>
+  <CrashPreventionBoundary fallback={<div className="text-center p-4">Loading failed</div>}>
     <div className="flex items-center justify-center h-64">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         <p className="mt-2 text-muted-foreground">Loading tests...</p>
       </div>
     </div>
-  </ErrorBoundary>
+  </CrashPreventionBoundary>
 );
 
 // Error display component
 const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-  <ErrorBoundary fallback={<div className="text-center p-4">Error display failed</div>}>
+  <CrashPreventionBoundary fallback={<div className="text-center p-4">Error display failed</div>}>
     <Card className="border-red-200">
       <CardContent className="p-6 text-center">
         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -148,7 +148,7 @@ const ErrorDisplay = ({ error, onRetry }: { error: string; onRetry: () => void }
         </Button>
       </CardContent>
     </Card>
-  </ErrorBoundary>
+  </CrashPreventionBoundary>
 );
 
 // Stats component
@@ -156,7 +156,7 @@ const TestStats = ({ tests }: { tests: Test[] }) => {
   const safeTests = ensureArray<Test>(tests);
   
   return (
-    <ErrorBoundary fallback={<div className="grid gap-4 md:grid-cols-4"><div className="text-center p-4">Stats unavailable</div></div>}>
+    <CrashPreventionBoundary fallback={<div className="grid gap-4 md:grid-cols-4"><div className="text-center p-4">Stats unavailable</div></div>}>
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardContent className="p-4">
@@ -197,7 +197,7 @@ const TestStats = ({ tests }: { tests: Test[] }) => {
           </CardContent>
         </Card>
       </div>
-    </ErrorBoundary>
+    </CrashPreventionBoundary>
   );
 };
 
@@ -232,7 +232,7 @@ const TestItem = ({
   };
 
   return (
-    <ErrorBoundary fallback={<Card><CardContent className="p-4">Test item unavailable</CardContent></Card>}>
+    <CrashPreventionBoundary fallback={<Card><CardContent className="p-4">Test item unavailable</CardContent></Card>}>
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
@@ -322,11 +322,11 @@ const TestItem = ({
           </div>
         </CardContent>
       </Card>
-    </ErrorBoundary>
+    </CrashPreventionBoundary>
   );
 };
 
-export default function TestsManagement() {
+function TestsManagement() {
   const [apiState, setApiState] = useState<ApiState>({
     tests: [],
     loading: true,
@@ -486,10 +486,14 @@ export default function TestsManagement() {
   }
 
   return (
-    <ErrorBoundary fallback={<div className="text-center p-8">Test management is temporarily unavailable</div>}>
+    <CrashPreventionBoundary 
+      level="page" 
+      context="Admin Test Management"
+      fallback={<div className="text-center p-8">Test management is temporarily unavailable</div>}
+    >
       <div className="space-y-6">
         {/* Header */}
-        <ErrorBoundary fallback={<div className="p-4">Header unavailable</div>}>
+        <CrashPreventionBoundary fallback={<div className="p-4">Header unavailable</div>}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Test Management</h1>
@@ -513,7 +517,7 @@ export default function TestsManagement() {
                       Upload questions in CSV or Excel format to quickly populate your tests
                     </DialogDescription>
                   </DialogHeader>
-                  <EnhancedCSVUpload onUploadComplete={() => {
+                  <EnhancedCsvUpload onClose={() => {
                     setShowBulkUpload(false);
                     fetchTests();
                   }} />
@@ -550,13 +554,13 @@ export default function TestsManagement() {
               </Dialog>
             </div>
           </div>
-        </ErrorBoundary>
+        </CrashPreventionBoundary>
 
         {/* Stats */}
         <TestStats tests={testsArray} />
 
         {/* Filters */}
-        <ErrorBoundary fallback={<Card><CardContent className="p-4">Filters unavailable</CardContent></Card>}>
+        <CrashPreventionBoundary fallback={<Card><CardContent className="p-4">Filters unavailable</CardContent></Card>}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -633,10 +637,10 @@ export default function TestsManagement() {
               </div>
             </CardContent>
           </Card>
-        </ErrorBoundary>
+        </CrashPreventionBoundary>
 
         {/* Tests List */}
-        <ErrorBoundary fallback={<div className="text-center p-8">Tests list unavailable</div>}>
+        <CrashPreventionBoundary fallback={<div className="text-center p-8">Tests list unavailable</div>}>
           {filteredTests.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -689,8 +693,8 @@ export default function TestsManagement() {
               </div>
             </div>
           )}
-        </ErrorBoundary>
+        </CrashPreventionBoundary>
       </div>
-    </ErrorBoundary>
+    </CrashPreventionBoundary>
   );
 }
