@@ -27,6 +27,9 @@ yarn-error.log*
 
 # local env files
 .env
+.env.local
+.env.production
+.env.staging
 
 # vercel
 .vercel
@@ -45,3 +48,16 @@ uploads/
 public/uploads/
 *.pdf
 !public/sample.pdf
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Cache
+.cache/
+*.log

@@ -88,8 +88,8 @@ export function EnhancedTestInterface({
   const [showInstructions, setShowInstructions] = useState(true);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout>();
-  const autoSaveRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch test data
   const fetchTestData = async () => {

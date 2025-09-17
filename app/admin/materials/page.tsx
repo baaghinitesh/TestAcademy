@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Upload, 
-  Download, 
-  Edit, 
-  Trash2, 
   FileText, 
+  Upload, 
+  Filter, 
+  Plus, 
+  Download, 
+  Trash2, 
   Eye, 
+  Search,
   FolderOpen,
   AlertTriangle,
   RefreshCw
@@ -26,41 +25,38 @@ interface Material {
   _id: string;
   title: string;
   description?: string;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  fileType: string;
-  subject: {
-    _id: string;
-    name: string;
-  } | string;
+  subject: any;
   classNumber: number;
   chapter?: string;
-  topic?: string;
-  materialType: 'pdf' | 'video' | 'document' | 'image' | 'other';
-  tags: string[];
+  materialType: 'pdf' | 'video' | 'document' | 'other';
+  filePath: string;
+  fileName: string;
+  fileSize: number;
   isPublic: boolean;
   downloadCount: number;
-  createdBy: string;
+  uploadedBy: string;
   createdAt: string;
   updatedAt: string;
+  tags?: string[];
 }
 
 interface ApiState {
   materials: Material[];
   loading: boolean;
   error: string | null;
+  totalCount: number;
 }
 
-interface FilterState {
+interface Filters {
   search: string;
+  class: string;
   subject: string;
-  classNumber: string;
-  materialType: string;
+  type: string;
+  isPublic: string;
 }
 
 // Safe API call wrapper
-const safeApiCall = async <T>(
+const safeApiCall = async <T,>(
   apiCall: () => Promise<T>,
   fallback: T,
   onError?: (error: any) => void
@@ -68,7 +64,6 @@ const safeApiCall = async <T>(
   try {
     return await apiCall();
   } catch (error) {
-    // API call failed silently
     onError?.(error);
     return fallback;
   }
@@ -210,81 +205,45 @@ const MaterialItem = ({
                   {material?.title || 'Untitled Material'}
                 </h3>
                 {material?.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-muted-foreground text-sm line-clamp-2">
                     {material.description}
                   </p>
                 )}
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <FileText className="h-4 w-4" />
-                  <span>{material?.fileName || 'Unknown file'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <FolderOpen className="h-4 w-4" />
-                  <span>{formatFileSize(material?.fileSize || 0)}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Download className="h-4 w-4" />
-                  <span>{material?.downloadCount || 0} downloads</span>
-                </div>
-              </div>
-              
-              <div className="text-xs text-muted-foreground">
-                Created: {formatDate(material?.createdAt || '')}
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Size: {formatFileSize(material?.fileSize || 0)}</span>
+                <span>Downloads: {material?.downloadCount || 0}</span>
+                <span>Created: {formatDate(material?.createdAt || '')}</span>
               </div>
             </div>
             
-            <ErrorBoundary fallback={<div className="text-sm text-muted-foreground">Actions unavailable</div>}>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (material?.fileUrl) {
-                      window.open(material.fileUrl, '_blank');
-                    }
-                  }}
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (material?.fileUrl) {
-                      const link = document.createElement('a');
-                      link.href = material.fileUrl;
-                      link.download = material?.fileName || 'download';
-                      link.click();
-                    }
-                  }}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onDelete(material?._id || '')}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </ErrorBoundary>
+            <div className="flex items-center gap-2 ml-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.open(`/api/materials/${material?._id}/download`, '_blank')}
+                className="h-8 w-8 p-0"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.open(`/study/materials/${material?._id}`, '_blank')}
+                className="h-8 w-8 p-0"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => onDelete(material?._id)}
+                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -296,41 +255,42 @@ export default function MaterialsManagement() {
   const [apiState, setApiState] = useState<ApiState>({
     materials: [],
     loading: true,
-    error: null
+    error: null,
+    totalCount: 0
   });
 
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<Filters>({
     search: '',
+    class: 'all',
     subject: 'all',
-    classNumber: 'all',
-    materialType: 'all'
+    type: 'all',
+    isPublic: 'all'
   });
 
-  const classes = [5, 6, 7, 8, 9, 10];
-  const subjects = ['Mathematics', 'Science', 'English', 'Social Studies', 'Hindi'];
-  const materialTypes = ['pdf', 'video', 'document', 'image', 'other'];
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12
+  });
 
   const fetchMaterials = useCallback(async () => {
     setApiState(prev => ({ ...prev, loading: true, error: null }));
 
     const result = await safeApiCall(
       async () => {
-        let url = '/api/materials';
-        const params = new URLSearchParams();
-        
-        if (filters.subject && filters.subject !== 'all') params.append('subject', filters.subject);
-        if (filters.classNumber && filters.classNumber !== 'all') params.append('classNumber', filters.classNumber);
-        if (filters.materialType && filters.materialType !== 'all') params.append('materialType', filters.materialType);
-        if (filters.search) params.append('search', filters.search);
-        
-        if (params.toString()) {
-          url += `?${params.toString()}`;
-        }
+        const params = new URLSearchParams({
+          page: pagination.page.toString(),
+          limit: pagination.limit.toString(),
+          search: filters.search,
+          class: filters.class,
+          subject: filters.subject,
+          type: filters.type,
+          isPublic: filters.isPublic
+        });
 
-        const response = await apiClient.get(url);
-        return response.data?.materials || [];
+        const response = await apiClient.get(`/api/materials?${params.toString()}`);
+        return response.data || { materials: [], totalCount: 0 };
       },
-      [],
+      { materials: [], totalCount: 0 },
       (error) => {
         setApiState(prev => ({ 
           ...prev, 
@@ -341,10 +301,11 @@ export default function MaterialsManagement() {
 
     setApiState(prev => ({
       ...prev,
-      materials: result,
+      materials: result.materials || [],
+      totalCount: result.totalCount || 0,
       loading: false
     }));
-  }, [filters.subject, filters.classNumber, filters.materialType, filters.search]);
+  }, [pagination.page, pagination.limit, filters.search, filters.class, filters.subject, filters.type, filters.isPublic]);
 
   useEffect(() => {
     fetchMaterials();
@@ -352,13 +313,14 @@ export default function MaterialsManagement() {
 
   const deleteMaterial = async (id: string) => {
     if (!id || !confirm('Are you sure you want to delete this material?')) return;
-    
+
     await safeApiCall(
       async () => {
         await apiClient.delete(`/api/materials/${id}`);
         setApiState(prev => ({
           ...prev,
-          materials: prev.materials.filter(material => material._id !== id)
+          materials: prev.materials.filter(material => material._id !== id),
+          totalCount: prev.totalCount - 1
         }));
       },
       null,
@@ -370,12 +332,12 @@ export default function MaterialsManagement() {
 
   const filteredMaterials = apiState.materials.filter(material => {
     if (!material) return false;
-    const searchLower = filters.search.toLowerCase();
-    return (
-      (material.title?.toLowerCase().includes(searchLower) || false) ||
-      (material.description?.toLowerCase().includes(searchLower) || false) ||
-      (material.fileName?.toLowerCase().includes(searchLower) || false)
-    );
+    
+    const matchesSearch = !filters.search || 
+      material.title?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      material.description?.toLowerCase().includes(filters.search.toLowerCase());
+    
+    return matchesSearch;
   });
 
   if (apiState.loading) {
@@ -391,13 +353,14 @@ export default function MaterialsManagement() {
       <div className="space-y-6">
         {/* Header */}
         <ErrorBoundary fallback={<div className="p-4">Header unavailable</div>}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Study Materials</h1>
+              <h1 className="text-3xl font-bold text-foreground">Learning Materials</h1>
               <p className="text-muted-foreground">
-                Manage and organize study materials for your students
+                Manage study materials, PDFs, and educational content
               </p>
             </div>
+            
             <Button className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
               Upload Material
@@ -405,17 +368,20 @@ export default function MaterialsManagement() {
           </div>
         </ErrorBoundary>
 
-        {/* Filters and Search */}
+        {/* Stats */}
+        <MaterialStats materials={apiState.materials} />
+
+        {/* Filters */}
         <ErrorBoundary fallback={<Card><CardContent className="p-4">Filters unavailable</CardContent></Card>}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Filters & Search
+                Filters
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-5">
+              <div className="grid gap-4 md:grid-cols-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -427,14 +393,17 @@ export default function MaterialsManagement() {
                 </div>
                 
                 <select
-                  value={filters.classNumber}
-                  onChange={(e) => setFilters(prev => ({ ...prev, classNumber: e.target.value }))}
+                  value={filters.class}
+                  onChange={(e) => setFilters(prev => ({ ...prev, class: e.target.value }))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Classes</option>
-                  {classes.map(cls => (
-                    <option key={cls} value={cls.toString()}>Class {cls}</option>
-                  ))}
+                  <option value="5">Class 5</option>
+                  <option value="6">Class 6</option>
+                  <option value="7">Class 7</option>
+                  <option value="8">Class 8</option>
+                  <option value="9">Class 9</option>
+                  <option value="10">Class 10</option>
                 </select>
                 
                 <select
@@ -443,57 +412,114 @@ export default function MaterialsManagement() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Subjects</option>
-                  {subjects.map(subject => (
-                    <option key={subject} value={subject}>{subject}</option>
-                  ))}
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Science">Science</option>
+                  <option value="English">English</option>
+                  <option value="Social Studies">Social Studies</option>
+                  <option value="Hindi">Hindi</option>
                 </select>
                 
                 <select
-                  value={filters.materialType}
-                  onChange={(e) => setFilters(prev => ({ ...prev, materialType: e.target.value }))}
+                  value={filters.type}
+                  onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Types</option>
-                  {materialTypes.map(type => (
-                    <option key={type} value={type} className="capitalize">{type}</option>
-                  ))}
+                  <option value="pdf">PDF</option>
+                  <option value="video">Video</option>
+                  <option value="document">Document</option>
+                  <option value="other">Other</option>
                 </select>
                 
-                <Button variant="outline" onClick={fetchMaterials}>
-                  Apply Filters
+                <select
+                  value={filters.isPublic}
+                  onChange={(e) => setFilters(prev => ({ ...prev, isPublic: e.target.value }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All Visibility</option>
+                  <option value="true">Public</option>
+                  <option value="false">Private</option>
+                </select>
+                
+                <Button 
+                  onClick={fetchMaterials}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
                 </Button>
               </div>
             </CardContent>
           </Card>
         </ErrorBoundary>
 
-        {/* Stats */}
-        <MaterialStats materials={apiState.materials} />
-
         {/* Materials List */}
-        <ErrorBoundary fallback={<Card><CardContent className="p-8 text-center">Material list unavailable</CardContent></Card>}>
-          <div className="space-y-4">
-            {filteredMaterials.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="text-muted-foreground">
-                    <FolderOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No materials found</h3>
-                    <p>Try adjusting your search criteria or upload a new material.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredMaterials.map((material) => (
-                <MaterialItem
-                  key={material?._id || Math.random()}
-                  material={material}
+        <ErrorBoundary fallback={<div className="text-center p-8">Materials list unavailable</div>}>
+          {filteredMaterials.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No materials found</h3>
+                <p className="text-muted-foreground mb-6">
+                  {apiState.materials.length === 0 
+                    ? "No materials have been uploaded yet. Upload your first material to get started."
+                    : "No materials match your current filters. Try adjusting your search criteria."
+                  }
+                </p>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Upload First Material
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filteredMaterials.map((material) => (
+                <MaterialItem 
+                  key={material._id}
+                  material={material} 
                   onDelete={deleteMaterial}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </ErrorBoundary>
+
+        {/* Pagination */}
+        {apiState.totalCount > pagination.limit && (
+          <ErrorBoundary fallback={<div className="p-4 text-center">Pagination unavailable</div>}>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                    {Math.min(pagination.page * pagination.limit, apiState.totalCount)} of{' '}
+                    {apiState.totalCount} materials
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                      disabled={pagination.page === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                      disabled={pagination.page * pagination.limit >= apiState.totalCount}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
+        )}
       </div>
     </ErrorBoundary>
   );

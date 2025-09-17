@@ -12,3 +12,6 @@ linter_config:
   - config_path: '.eslintrc.json'
     type: 'eslint'
     language: 'typescript'
+  - config_path: 'tsconfig.json'
+    type: 'tsc'
+    language: 'typescript'

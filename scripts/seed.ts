@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import connectToDatabase from '../backend/utils/database';
 import { User, Class, Subject } from '../backend/models';
 

@@ -60,7 +60,7 @@ interface FilterState {
 }
 
 // Safe API call wrapper
-const safeApiCall = async <T>(
+const safeApiCall = async <T,>(
   apiCall: () => Promise<T>,
   fallback: T,
   onError?: (error: any) => void
@@ -148,17 +148,9 @@ const TestItem = ({
   onDelete 
 }: { 
   test: Test; 
-  onToggleStatus: (id: string, currentStatus: boolean) => void; 
-  onDelete: (id: string) => void; 
+  onToggleStatus: (id: string) => void;
+  onDelete: (id: string) => void;
 }) => {
-  const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-500' : 'bg-gray-400';
-  };
-
-  const getStatusText = (isActive: boolean) => {
-    return isActive ? 'Published' : 'Draft';
-  };
-
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString();
@@ -167,111 +159,94 @@ const TestItem = ({
     }
   };
 
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
   return (
     <ErrorBoundary fallback={<Card><CardContent className="p-4">Test item unavailable</CardContent></Card>}>
-      <Card key={test?._id} className="hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader>
           <div className="flex items-start justify-between">
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary">Class {test?.classNumber || 'N/A'}</Badge>
-                <Badge variant="outline">{test?.subject || 'N/A'}</Badge>
-                <div className="flex items-center gap-1">
-                  <div className={`h-2 w-2 rounded-full ${getStatusColor(test?.isActive || false)}`}></div>
-                  <span className="text-xs text-muted-foreground">
-                    {getStatusText(test?.isActive || false)}
-                  </span>
-                </div>
+                <Badge variant="outline">{test?.subject || 'Unknown Subject'}</Badge>
                 {test?.chapter && (
                   <Badge variant="secondary">{test.chapter}</Badge>
                 )}
+                <Badge 
+                  variant={test?.isActive ? "default" : "secondary"}
+                  className={test?.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                >
+                  {test?.isActive ? 'Published' : 'Draft'}
+                </Badge>
               </div>
               
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
-                  {test?.title || 'Untitled Test'}
-                </h3>
-                {test?.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {test.description}
-                  </p>
-                )}
-              </div>
+              <CardTitle className="text-lg">
+                {test?.title || 'Untitled Test'}
+              </CardTitle>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{test?.duration || 0} mins</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Target className="h-4 w-4" />
-                  <span>{test?.totalMarks || 0} marks</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Eye className="h-4 w-4" />
-                  <span>{test?.questions?.length || 0} questions</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>{test?.attempts || 0} attempts</span>
-                </div>
-              </div>
-              
-              <div className="text-xs text-muted-foreground">
-                Created: {formatDate(test?.createdAt || '')}
-              </div>
+              {test?.description && (
+                <CardDescription className="line-clamp-2">
+                  {test.description}
+                </CardDescription>
+              )}
             </div>
             
-            <ErrorBoundary fallback={<div className="text-sm text-muted-foreground">Actions unavailable</div>}>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={test?.isActive ? "destructive" : "default"}
-                  size="sm"
-                  onClick={() => onToggleStatus(test?._id || '', test?.isActive || false)}
-                >
-                  {test?.isActive ? (
-                    <>
-                      <Pause className="h-4 w-4 mr-1" />
-                      Unpublish
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-4 w-4 mr-1" />
-                      Publish
-                    </>
-                  )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      View Test
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <Edit className="h-4 w-4" />
-                      Edit Test
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      View Attempts
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2 text-red-600"
-                      onClick={() => onDelete(test?._id || '')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </ErrorBoundary>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => window.open(`/admin/tests/${test?._id}/edit`, '_blank')}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Test
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.open(`/test/preview/${test?._id}`, '_blank')}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview Test
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onToggleStatus(test?._id)}>
+                  {test?.isActive ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+                  {test?.isActive ? 'Unpublish' : 'Publish'}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onDelete(test?._id)}
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Test
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span>{formatDuration(test?.duration || 0)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-muted-foreground" />
+              <span>{test?.totalMarks || 0} marks</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>{test?.attempts || 0} attempts</span>
+            </div>
+            <div className="text-muted-foreground">
+              Created: {formatDate(test?.createdAt || '')}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -293,33 +268,29 @@ export default function TestsManagement() {
     selectedStatus: 'all'
   });
 
-  const classes = [5, 6, 7, 8, 9, 10];
-  const subjects = ['Mathematics', 'Science', 'English', 'Social Studies', 'Hindi'];
-
   const fetchTests = useCallback(async () => {
     setApiState(prev => ({ ...prev, loading: true, error: null }));
 
     const result = await safeApiCall(
       async () => {
-        let url = '/api/tests';
-        const params = new URLSearchParams();
-        
-        if (filters.selectedClass !== 'all') {
-          params.append('classNumber', filters.selectedClass);
-        }
-        if (filters.selectedSubject !== 'all') {
-          params.append('subject', filters.selectedSubject);
-        }
-        if (filters.selectedStatus !== 'all') {
-          params.append('isActive', filters.selectedStatus);
-        }
-        
-        if (params.toString()) {
-          url += `?${params.toString()}`;
-        }
+        const params = new URLSearchParams({
+          class: filters.selectedClass,
+          subject: filters.selectedSubject,
+          status: filters.selectedStatus
+        });
 
-        const response = await apiClient.get(url);
-        return response.data?.tests || [];
+        const response = await apiClient.get(`/api/tests?${params.toString()}`);
+        const data = response.data;
+        
+        // Ensure we always return an array
+        if (Array.isArray(data)) {
+          return data;
+        } else if (data && Array.isArray(data.tests)) {
+          return data.tests;
+        } else {
+          console.warn('API returned non-array data:', data);
+          return [];
+        }
       },
       [],
       (error) => {
@@ -341,22 +312,24 @@ export default function TestsManagement() {
     fetchTests();
   }, [fetchTests]);
 
-  const toggleTestStatus = async (id: string, currentStatus: boolean) => {
+  const toggleTestStatus = async (id: string) => {
     if (!id) return;
 
     await safeApiCall(
       async () => {
-        await apiClient.patch(`/api/tests/${id}`, { isActive: !currentStatus });
+        const test = apiState.tests.find(t => t._id === id);
+        const newStatus = !test?.isActive;
+        
+        await apiClient.patch(`/api/tests/${id}`, { isActive: newStatus });
         setApiState(prev => ({
           ...prev,
-          tests: prev.tests.map(test => 
-            test._id === id ? { ...test, isActive: !currentStatus } : test
+          tests: prev.tests.map(test =>
+            test._id === id ? { ...test, isActive: newStatus } : test
           )
         }));
       },
       null,
       () => {
-        // Optionally show error notification
         console.error('Failed to update test status');
       }
     );
@@ -364,7 +337,7 @@ export default function TestsManagement() {
 
   const deleteTest = async (id: string) => {
     if (!id || !confirm('Are you sure you want to delete this test?')) return;
-    
+
     await safeApiCall(
       async () => {
         await apiClient.delete(`/api/tests/${id}`);
@@ -375,20 +348,32 @@ export default function TestsManagement() {
       },
       null,
       () => {
-        // Optionally show error notification
         console.error('Failed to delete test');
       }
     );
   };
 
-  const filteredTests = apiState.tests.filter(test => {
+  // Ensure tests is always an array with proper safety checks
+  const testsArray = Array.isArray(apiState.tests) ? apiState.tests : [];
+  
+  const filteredTests = testsArray.filter(test => {
     if (!test) return false;
-    const searchLower = filters.searchTerm.toLowerCase();
-    return (
-      (test.title?.toLowerCase().includes(searchLower) || false) ||
-      (test.subject?.toLowerCase().includes(searchLower) || false) ||
-      (test.description?.toLowerCase().includes(searchLower) || false)
-    );
+    
+    const matchesSearch = !filters.searchTerm || 
+      test.title?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      test.description?.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    
+    const matchesClass = filters.selectedClass === 'all' || 
+      test.classNumber?.toString() === filters.selectedClass;
+    
+    const matchesSubject = filters.selectedSubject === 'all' || 
+      test.subject === filters.selectedSubject;
+    
+    const matchesStatus = filters.selectedStatus === 'all' || 
+      (filters.selectedStatus === 'published' && test.isActive) ||
+      (filters.selectedStatus === 'draft' && !test.isActive);
+    
+    return matchesSearch && matchesClass && matchesSubject && matchesStatus;
   });
 
   if (apiState.loading) {
@@ -400,31 +385,35 @@ export default function TestsManagement() {
   }
 
   return (
-    <ErrorBoundary fallback={<div className="text-center p-8">Tests management is temporarily unavailable</div>}>
+    <ErrorBoundary fallback={<div className="text-center p-8">Test management is temporarily unavailable</div>}>
       <div className="space-y-6">
         {/* Header */}
         <ErrorBoundary fallback={<div className="p-4">Header unavailable</div>}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Manage Tests</h1>
+              <h1 className="text-3xl font-bold text-foreground">Test Management</h1>
               <p className="text-muted-foreground">
-                Create and manage tests for your students
+                Create, manage, and analyze student assessments
               </p>
             </div>
+            
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              Create New Test
+              Create Test
             </Button>
           </div>
         </ErrorBoundary>
 
-        {/* Filters and Search */}
+        {/* Stats */}
+        <TestStats tests={testsArray} />
+
+        {/* Filters */}
         <ErrorBoundary fallback={<Card><CardContent className="p-4">Filters unavailable</CardContent></Card>}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Filters & Search
+                Filters
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -445,9 +434,12 @@ export default function TestsManagement() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Classes</option>
-                  {classes.map(cls => (
-                    <option key={cls} value={cls.toString()}>Class {cls}</option>
-                  ))}
+                  <option value="5">Class 5</option>
+                  <option value="6">Class 6</option>
+                  <option value="7">Class 7</option>
+                  <option value="8">Class 8</option>
+                  <option value="9">Class 9</option>
+                  <option value="10">Class 10</option>
                 </select>
                 
                 <select
@@ -456,9 +448,11 @@ export default function TestsManagement() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Subjects</option>
-                  {subjects.map(subject => (
-                    <option key={subject} value={subject}>{subject}</option>
-                  ))}
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Science">Science</option>
+                  <option value="English">English</option>
+                  <option value="Social Studies">Social Studies</option>
+                  <option value="Hindi">Hindi</option>
                 </select>
                 
                 <select
@@ -467,45 +461,54 @@ export default function TestsManagement() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Status</option>
-                  <option value="true">Published</option>
-                  <option value="false">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
                 </select>
                 
-                <Button variant="outline" onClick={fetchTests}>
-                  Apply Filters
+                <Button 
+                  onClick={fetchTests}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
                 </Button>
               </div>
             </CardContent>
           </Card>
         </ErrorBoundary>
 
-        {/* Stats */}
-        <TestStats tests={apiState.tests} />
-
         {/* Tests List */}
-        <ErrorBoundary fallback={<Card><CardContent className="p-8 text-center">Test list unavailable</CardContent></Card>}>
-          <div className="space-y-4">
-            {filteredTests.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="text-muted-foreground">
-                    <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No tests found</h3>
-                    <p>Try adjusting your search criteria or create a new test.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredTests.map((test) => (
-                <TestItem
-                  key={test?._id || Math.random()}
-                  test={test}
+        <ErrorBoundary fallback={<div className="text-center p-8">Tests list unavailable</div>}>
+          {filteredTests.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No tests found</h3>
+                <p className="text-muted-foreground mb-6">
+                  {testsArray.length === 0 
+                    ? "No tests have been created yet. Create your first test to get started."
+                    : "No tests match your current filters. Try adjusting your search criteria."
+                  }
+                </p>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create First Test
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filteredTests.map((test) => (
+                <TestItem 
+                  key={test._id}
+                  test={test} 
                   onToggleStatus={toggleTestStatus}
                   onDelete={deleteTest}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </ErrorBoundary>
       </div>
     </ErrorBoundary>

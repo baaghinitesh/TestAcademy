@@ -58,7 +58,7 @@ interface FilterState {
 }
 
 // Safe API call wrapper
-const safeApiCall = async <T>(
+const safeApiCall = async <T,>(
   apiCall: () => Promise<T>,
   fallback: T,
   onError?: (error: any) => void
@@ -151,8 +151,7 @@ const UserItem = ({
 }) => {
   const formatDate = (dateString?: string) => {
     try {
-      if (!dateString) return 'Never';
-      return new Date(dateString).toLocaleDateString();
+      return dateString ? new Date(dateString).toLocaleDateString() : 'Never';
     } catch {
       return 'Invalid Date';
     }
@@ -160,38 +159,40 @@ const UserItem = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'suspended': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'suspended':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-purple-100 text-purple-800';
-      case 'student': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getRoleIcon = (role: string) => {
+    return role === 'admin' ? <Shield className="h-4 w-4" /> : <Users className="h-4 w-4" />;
   };
 
   return (
     <ErrorBoundary fallback={<Card><CardContent className="p-4">User item unavailable</CardContent></Card>}>
-      <Card key={user?._id} className="hover:shadow-md transition-shadow">
+      <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary" className={getRoleColor(user?.role || 'student')}>
-                  {user?.role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
-                  {user?.role || 'Unknown'}
-                </Badge>
-                <Badge className={getStatusColor(user?.status || 'inactive')}>
-                  {user?.status || 'Unknown'}
-                </Badge>
+                <div className="flex items-center gap-1">
+                  {getRoleIcon(user?.role)}
+                  <Badge variant={user?.role === 'admin' ? 'default' : 'secondary'}>
+                    {user?.role === 'admin' ? 'Admin' : 'Student'}
+                  </Badge>
+                </div>
                 {user?.class && (
                   <Badge variant="outline">Class {user.class}</Badge>
                 )}
+                <Badge variant="secondary" className={getStatusColor(user?.status)}>
+                  {user?.status?.charAt(0).toUpperCase() + user?.status?.slice(1)}
+                </Badge>
               </div>
               
               <div>
@@ -200,80 +201,72 @@ const UserItem = ({
                 </h3>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
+                    <Mail className="h-3 w-3" />
                     <span>{user?.email || 'No email'}</span>
                   </div>
                   {user?.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
+                      <Phone className="h-3 w-3" />
                       <span>{user.phone}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+                <div>
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
                     <span>Joined: {formatDate(user?.createdAt)}</span>
                   </div>
                 </div>
-              </div>
-              
-              {user?.role === 'student' && (
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="text-muted-foreground">
-                    <span className="font-medium">Tests:</span> {user?.totalTests || 0}
-                  </div>
-                  <div className="text-muted-foreground">
-                    <span className="font-medium">Avg Score:</span> {user?.averageScore?.toFixed(1) || '0.0'}%
-                  </div>
+                <div>
+                  <span>Last Login: {formatDate(user?.lastLogin)}</span>
                 </div>
-              )}
-              
-              <div className="text-xs text-muted-foreground">
-                Last Login: {formatDate(user?.lastLogin)}
+                {user?.role === 'student' && (
+                  <>
+                    <div>
+                      <span>Tests: {user?.totalTests || 0}</span>
+                    </div>
+                    <div>
+                      <span>Avg Score: {user?.averageScore?.toFixed(1) || '0.0'}%</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             
-            <ErrorBoundary fallback={<div className="text-sm text-muted-foreground">Actions unavailable</div>}>
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <Edit className="h-4 w-4" />
-                      Edit User
-                    </DropdownMenuItem>
-                    {user?.status !== 'active' && (
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 text-green-600"
-                        onClick={() => onStatusUpdate(user?._id || '', 'active')}
-                      >
-                        <Shield className="h-4 w-4" />
-                        Activate
-                      </DropdownMenuItem>
-                    )}
-                    {user?.status === 'active' && (
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 text-orange-600"
-                        onClick={() => onStatusUpdate(user?._id || '', 'suspended')}
-                      >
-                        <Shield className="h-4 w-4" />
-                        Suspend
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2 text-red-600"
-                      onClick={() => onDelete(user?._id || '')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </ErrorBoundary>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => window.open(`/admin/users/${user?._id}/edit`, '_blank')}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit User
+                </DropdownMenuItem>
+                {user?.status === 'active' ? (
+                  <DropdownMenuItem onClick={() => onStatusUpdate(user?._id, 'suspended')}>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Suspend User
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onStatusUpdate(user?._id, 'active')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Activate User
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem 
+                  onClick={() => onDelete(user?._id)}
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardContent>
       </Card>
@@ -295,24 +288,19 @@ export default function UsersManagement() {
     selectedStatus: 'all'
   });
 
-  const classes = [5, 6, 7, 8, 9, 10];
-
   const fetchUsers = useCallback(async () => {
     setApiState(prev => ({ ...prev, loading: true, error: null }));
 
     const result = await safeApiCall(
       async () => {
-        let url = '/api/users';
-        const params = new URLSearchParams();
-        
-        if (filters.selectedRole !== 'all') params.append('role', filters.selectedRole);
-        if (filters.selectedClass !== 'all') params.append('class', filters.selectedClass);
-        if (filters.selectedStatus !== 'all') params.append('status', filters.selectedStatus);
-        
-        if (params.toString()) url += `?${params.toString()}`;
+        const params = new URLSearchParams({
+          role: filters.selectedRole,
+          class: filters.selectedClass,
+          status: filters.selectedStatus
+        });
 
-        const response = await apiClient.get(url);
-        return response.data?.users || [];
+        const response = await apiClient.get(`/api/users?${params.toString()}`);
+        return response.data || [];
       },
       [],
       (error) => {
@@ -342,7 +330,7 @@ export default function UsersManagement() {
         await apiClient.patch(`/api/users/${id}`, { status });
         setApiState(prev => ({
           ...prev,
-          users: prev.users.map(user => 
+          users: prev.users.map(user =>
             user._id === id ? { ...user, status: status as any } : user
           )
         }));
@@ -356,7 +344,7 @@ export default function UsersManagement() {
 
   const deleteUser = async (id: string) => {
     if (!id || !confirm('Are you sure you want to delete this user?')) return;
-    
+
     await safeApiCall(
       async () => {
         await apiClient.delete(`/api/users/${id}`);
@@ -374,12 +362,12 @@ export default function UsersManagement() {
 
   const filteredUsers = apiState.users.filter(user => {
     if (!user) return false;
-    const searchLower = filters.searchTerm.toLowerCase();
-    return (
-      (user.name?.toLowerCase().includes(searchLower) || false) ||
-      (user.email?.toLowerCase().includes(searchLower) || false) ||
-      (user.phone?.toLowerCase().includes(searchLower) || false)
-    );
+    
+    const matchesSearch = !filters.searchTerm || 
+      user.name?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    
+    return matchesSearch;
   });
 
   if (apiState.loading) {
@@ -391,31 +379,35 @@ export default function UsersManagement() {
   }
 
   return (
-    <ErrorBoundary fallback={<div className="text-center p-8">Users management is temporarily unavailable</div>}>
+    <ErrorBoundary fallback={<div className="text-center p-8">User management is temporarily unavailable</div>}>
       <div className="space-y-6">
         {/* Header */}
         <ErrorBoundary fallback={<div className="p-4">Header unavailable</div>}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground">User Management</h1>
               <p className="text-muted-foreground">
-                Manage students and admin users
+                Manage students, admins, and user accounts
               </p>
             </div>
+            
             <Button className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
-              Add New User
+              Add User
             </Button>
           </div>
         </ErrorBoundary>
 
-        {/* Filters and Search */}
+        {/* Stats */}
+        <UserStats users={apiState.users} />
+
+        {/* Filters */}
         <ErrorBoundary fallback={<Card><CardContent className="p-4">Filters unavailable</CardContent></Card>}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="h-5 w-5" />
-                Filters & Search
+                Filters
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -446,9 +438,12 @@ export default function UsersManagement() {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="all">All Classes</option>
-                  {classes.map(cls => (
-                    <option key={cls} value={cls.toString()}>Class {cls}</option>
-                  ))}
+                  <option value="5">Class 5</option>
+                  <option value="6">Class 6</option>
+                  <option value="7">Class 7</option>
+                  <option value="8">Class 8</option>
+                  <option value="9">Class 9</option>
+                  <option value="10">Class 10</option>
                 </select>
                 
                 <select
@@ -462,41 +457,50 @@ export default function UsersManagement() {
                   <option value="suspended">Suspended</option>
                 </select>
                 
-                <Button variant="outline" onClick={fetchUsers}>
-                  Apply Filters
+                <Button 
+                  onClick={fetchUsers}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
                 </Button>
               </div>
             </CardContent>
           </Card>
         </ErrorBoundary>
 
-        {/* Stats */}
-        <UserStats users={apiState.users} />
-
         {/* Users List */}
-        <ErrorBoundary fallback={<Card><CardContent className="p-8 text-center">User list unavailable</CardContent></Card>}>
-          <div className="space-y-4">
-            {filteredUsers.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <div className="text-muted-foreground">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">No users found</h3>
-                    <p>Try adjusting your search criteria or add a new user.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredUsers.map((user) => (
-                <UserItem
-                  key={user?._id || Math.random()}
-                  user={user}
+        <ErrorBoundary fallback={<div className="text-center p-8">Users list unavailable</div>}>
+          {filteredUsers.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold mb-2">No users found</h3>
+                <p className="text-muted-foreground mb-6">
+                  {apiState.users.length === 0 
+                    ? "No users have been registered yet."
+                    : "No users match your current filters. Try adjusting your search criteria."
+                  }
+                </p>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add First User
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filteredUsers.map((user) => (
+                <UserItem 
+                  key={user._id}
+                  user={user} 
                   onStatusUpdate={updateUserStatus}
                   onDelete={deleteUser}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </ErrorBoundary>
       </div>
     </ErrorBoundary>

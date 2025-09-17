@@ -203,17 +203,35 @@ export function EnhancedQuestionManager() {
     if (!csvFile) return;
 
     try {
-      const formData = new FormData();
-      formData.append('file', csvFile);
-      formData.append('createAutoTests', 'true');
+      setLoading(true);
+      setError(null);
+      
+      // Parse CSV file
+      const csvText = await csvFile.text();
+      const csvData = parseCSVData(csvText);
+      
+      if (csvData.length === 0) {
+        throw new Error('CSV file is empty or contains no valid data');
+      }
 
       const response = await fetch('/api/questions/bulk-upload-v2', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          csvData,
+          autoCreateTest: true,
+          testTitle: `Bulk Upload Test - ${new Date().toLocaleDateString()}`,
+          testDescription: 'Automatically created from bulk question upload',
+          testDuration: Math.max(60, csvData.length * 2), // 2 minutes per question minimum
+          validateOnly: false
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Upload failed: ${response.status}`);
       }
 
       const session = await response.json();
@@ -224,7 +242,100 @@ export function EnhancedQuestionManager() {
     } catch (error) {
       console.error('Upload error:', error);
       setError(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  // Parse CSV data from text
+  const parseCSVData = (csvText: string) => {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const expectedHeaders = [
+      'questionText', 'questionType', 'options', 'correctAnswers', 
+      'classNumber', 'subject', 'chapter', 'topic', 'subtopic', 
+      'difficulty', 'marks', 'explanation', 'hint', 'tags', 
+      'source', 'language', 'questionImageUrl', 'explanationImageUrl', 
+      'hintImageUrl', 'estimatedTime', 'testTypes'
+    ];
+    
+    // Validate headers
+    const requiredHeaders = ['questionText', 'questionType', 'options', 'correctAnswers', 'classNumber', 'subject', 'chapter', 'topic'];
+    const missingRequired = requiredHeaders.filter(h => !headers.includes(h));
+    
+    if (missingRequired.length > 0) {
+      throw new Error(`Missing required columns: ${missingRequired.join(', ')}`);
+    }
+    
+    const csvData = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      // Parse CSV line with proper quote handling
+      const values = parseCSVLine(line);
+      
+      if (values.length < headers.length) {
+        console.warn(`Row ${i + 1} has fewer values than headers, skipping`);
+        continue;
+      }
+      
+      const row: any = {};
+      headers.forEach((header, index) => {
+        const value = values[index]?.trim() || '';
+        
+        // Type conversions
+        if (header === 'classNumber') {
+          row[header] = parseInt(value) || 0;
+        } else if (header === 'marks') {
+          row[header] = parseFloat(value) || 1;
+        } else if (header === 'estimatedTime') {
+          row[header] = parseInt(value) || 60;
+        } else {
+          row[header] = value;
+        }
+      });
+      
+      // Skip empty rows
+      if (!row.questionText || !row.questionType) {
+        continue;
+      }
+      
+      csvData.push(row);
+    }
+    
+    return csvData;
+  };
+  
+  // Parse a single CSV line with quote handling
+  const parseCSVLine = (line: string): string[] => {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current);
+    return result;
   };
 
   // Poll upload progress

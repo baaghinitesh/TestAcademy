@@ -56,7 +56,7 @@ interface ApiState {
 }
 
 // Safe API call wrapper
-const safeApiCall = async <T>(
+const safeApiCall = async <T,>(
   apiCall: () => Promise<T>,
   fallback: T,
   onError?: (error: any) => void
@@ -202,37 +202,27 @@ const TestPerformanceTable = ({ tests }: { tests?: TestPerformance[] }) => (
                 <div className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-3">
                     <h4 className="font-semibold">{test?.testTitle || 'Unknown Test'}</h4>
-                    <div className="text-sm text-muted-foreground">
-                      {test?.completionRate?.toFixed(1) || '0'}% completion
-                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {test?.totalAttempts || 0} attempts
+                    </span>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <span className="text-muted-foreground">Attempts:</span>
-                      <div className="font-semibold">{test?.totalAttempts || 0}</div>
+                      <p className="text-sm text-muted-foreground">Average</p>
+                      <p className="font-bold text-lg">{test?.averageScore?.toFixed(1) || '0.0'}%</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Average:</span>
-                      <div className="font-semibold">{test?.averageScore?.toFixed(1) || '0'}%</div>
+                      <p className="text-sm text-muted-foreground">Highest</p>
+                      <p className="font-bold text-lg text-green-600">{test?.highestScore || 0}%</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Highest:</span>
-                      <div className="font-semibold text-green-600">{test?.highestScore || 0}%</div>
+                      <p className="text-sm text-muted-foreground">Lowest</p>
+                      <p className="font-bold text-lg text-red-600">{test?.lowestScore || 0}%</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Lowest:</span>
-                      <div className="font-semibold text-red-600">{test?.lowestScore || 0}%</div>
-                    </div>
-                  </div>
-                  
-                  {/* Progress bar for average score */}
-                  <div className="mt-3">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(test?.averageScore || 0, 100)}%` }}
-                      ></div>
+                      <p className="text-sm text-muted-foreground">Completion</p>
+                      <p className="font-bold text-lg">{test?.completionRate?.toFixed(1) || '0.0'}%</p>
                     </div>
                   </div>
                 </div>
@@ -411,8 +401,12 @@ export default function AnalyticsManagement() {
                   <option value="10">Class 10</option>
                 </select>
                 
-                <Button variant="outline" onClick={fetchAnalytics}>
-                  Apply Filters
+                <Button 
+                  onClick={fetchAnalytics}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
                 </Button>
               </div>
             </CardContent>
@@ -422,30 +416,30 @@ export default function AnalyticsManagement() {
         {/* Overview Stats */}
         <OverviewStats overview={apiState.data?.overview} />
 
-        {/* Detailed Analytics Tabs */}
-        <ErrorBoundary fallback={<Card><CardContent className="p-8 text-center">Detailed analytics unavailable</CardContent></Card>}>
-          <Tabs defaultValue="performance" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="performance">Test Performance</TabsTrigger>
-              <TabsTrigger value="students">Student Analytics</TabsTrigger>
-              <TabsTrigger value="subjects">Subject Insights</TabsTrigger>
-              <TabsTrigger value="trends">Trends & Patterns</TabsTrigger>
+        {/* Tabs for different analytics views */}
+        <ErrorBoundary fallback={<div className="p-8 text-center">Analytics tabs unavailable</div>}>
+          <Tabs defaultValue="tests" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="tests">Test Performance</TabsTrigger>
+              <TabsTrigger value="students">Student Performance</TabsTrigger>
+              <TabsTrigger value="subjects">Subject Analysis</TabsTrigger>
+              <TabsTrigger value="trends">Performance Trends</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="performance">
+            <TabsContent value="tests">
               <TestPerformanceTable tests={apiState.data?.testPerformance} />
             </TabsContent>
 
             <TabsContent value="students">
               <Card>
                 <CardHeader>
-                  <CardTitle>Student Performance Analytics</CardTitle>
+                  <CardTitle>Student Performance Overview</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
                     <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">Student Analytics</h3>
-                    <p>Detailed student performance data will appear here.</p>
+                    <p>Individual student performance metrics will appear here.</p>
                   </div>
                 </CardContent>
               </Card>
