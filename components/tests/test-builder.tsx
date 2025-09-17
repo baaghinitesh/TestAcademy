@@ -136,17 +136,20 @@ interface QuestionBank {
 }
 
 interface TestBuilderProps {
+  onTestSaved?: () => void;
+  initialTest?: any;
+  subjects?: Array<{_id: string; name: string}>;
   onSave?: (test: TestSettings & { questions: TestQuestion[] }) => Promise<void>;
   onPreview?: (test: TestSettings & { questions: TestQuestion[] }) => void;
   existingTest?: TestSettings & { questions: TestQuestion[] };
   onClose?: () => void;
 }
 
-export function TestBuilder({ onSave, onPreview, existingTest, onClose }: TestBuilderProps) {
+export function TestBuilder({ onTestSaved, initialTest, subjects, onSave, onPreview, existingTest, onClose }: TestBuilderProps) {
   const [activeTab, setActiveTab] = useState('questions');
   const [questionBank, setQuestionBank] = useState<QuestionBank>({ questions: [], total: 0, hierarchyStats: {} });
-  const [selectedQuestions, setSelectedQuestions] = useState<TestQuestion[]>(existingTest?.questions || []);
-  const [testSettings, setTestSettings] = useState<TestSettings>(existingTest || {
+  const [selectedQuestions, setSelectedQuestions] = useState<TestQuestion[]>((existingTest || initialTest)?.questions || []);
+  const [testSettings, setTestSettings] = useState<TestSettings>((existingTest || initialTest) || {
     title: '',
     description: '',
     subject: '',
@@ -359,15 +362,45 @@ export function TestBuilder({ onSave, onPreview, existingTest, onClose }: TestBu
     try {
       if (onSave) {
         await onSave({ ...testSettings, questions: selectedQuestions });
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        // Default API call to create/update test
+        const testData = {
+          ...testSettings,
+          questions: selectedQuestions.map(q => q._id),
+          totalQuestions: selectedQuestions.length,
+          isActive: true,
+          isPublished: false
+        };
+
+        const endpoint = initialTest?._id ? `/api/tests/${initialTest._id}` : '/api/tests';
+        const method = initialTest?._id ? 'PUT' : 'POST';
+        
+        const response = await fetch(endpoint, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(testData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save test');
+        }
+      }
+      
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+      
+      // Call the callback to close dialog and refresh list
+      if (onTestSaved) {
+        onTestSaved();
       }
     } catch (error) {
       console.error('Failed to save test:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [testSettings, selectedQuestions, onSave]);
+  }, [testSettings, selectedQuestions, onSave, initialTest, onTestSaved]);
 
   // Preview test
   const previewTest = useCallback(() => {
