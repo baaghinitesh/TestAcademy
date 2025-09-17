@@ -1,5 +1,5 @@
 import './globals.css';
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
 import { AuthProvider } from '@/contexts/auth-context';
 import { ThemeProvider } from '@/contexts/theme-context';
@@ -14,9 +14,12 @@ export const metadata: Metadata = {
   description: 'Online learning platform for Classes 5-10 with study materials, tests, and performance analytics'
 };
 
-export const viewport: Viewport = {
-  maximumScale: 1
-};
+// Temporarily disabled to debug generateViewport error
+// export const viewport: Viewport = {
+//   width: 'device-width',
+//   initialScale: 1,
+//   maximumScale: 1
+// };
 
 const manrope = Manrope({ subsets: ['latin'] });
 
@@ -39,6 +42,9 @@ export default async function RootLayout({
       lang="en"
       className={`${manrope.className}`}
     >
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      </head>
       <body className="min-h-[100dvh] bg-background text-foreground">
         <ErrorBoundary>
           <ThemeProvider>
